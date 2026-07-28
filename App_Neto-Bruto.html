@@ -263,6 +263,7 @@
             box-sizing: border-box;
         }
         .result-caption {
+            text-align: center;   /* BRUTO / NETO stoji na sredini */
             color: #4f46e5;
             font-size: 16px;
             font-weight: 600;
@@ -275,6 +276,7 @@
         .result-item { margin-bottom: 10px; }
         .result-item:last-child { margin-bottom: 0; }
         .result-box label {
+            text-align: left;   /* napisi levo, zneski pod njimi ostanejo desno */
             color: #4f46e5;
             font-size: 16px;
             text-transform: uppercase;
@@ -300,6 +302,34 @@
         @media (max-width: 900px) {
             .calc-grid { grid-template-columns: 1fr; }
 
+            /* Vec prostora za napise: stanjsamo vse tri plasti robov.
+               Ne do nicle - bela kartica s senco bi sicer "visela" na robu zaslona. */
+            body { padding: 6px; }
+            .container { padding: 10px; border-radius: 8px; }
+            .col { padding: 10px 12px; }
+
+            /* Naslov harmonike in znesek eden POD drugim, ne eden ob drugem.
+               Tako si ne delita sirine in se ne moreta prekrivati. */
+            .col.zaprt {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 2px;
+                padding-right: 26px;   /* prostor za puscico */
+            }
+            .col.zaprt > .col-header {
+                flex: none;
+                min-height: 0;
+                padding-top: 4px;
+            }
+            /* Naslov ostane v ENI vrstici; ce je predolg, se obrez'e s tremi pikicami. */
+            .col.zaprt > .col-header > * { min-width: 0; }
+            .col.zaprt > .summary-block {
+                display: block;   /* prek osnovnega flex pravila, da poravnava sploh ucinkuje */
+                align-self: stretch;
+                text-align: right;
+            }
+            .col.zaprt .mini-result { text-align: right; }
+
             /* Polje s končnimi zneski skoči na vrh in ostane prilepljeno,
                da so zneski med vnašanjem ves čas pred očmi. */
             .calc-grid > .col-plain {
@@ -310,8 +340,29 @@
             }
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
-            .result-item { margin-bottom: 4px; }
+            .result-item {
+                margin-bottom: 4px;
+                display: flex;                    /* napis levo, znesek desno, ista vrstica */
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 10px;
+            }
+            .result-box label { margin-bottom: 0; }
             .result-sum { margin-top: 8px; padding-top: 6px; }
+
+            .col.zaprt > .col-header {
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.4;
+            }
+            /* Puscica se poravna z naslovom, ne s sredino celotnega traku */
+            .col.zaprt > .col-header::after {
+                top: 4px;
+                bottom: auto;
+                height: 28px;
+            }
 
             /* Podvojeno polje z zneski v drugi vrstici na telefonu ni potrebno */
             .row-second > .col-plain { display: none; }
