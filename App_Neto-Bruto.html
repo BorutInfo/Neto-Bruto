@@ -306,12 +306,17 @@
         }
         .result-sum .result-osnova { font-size: 24px; }
 
-        /* Naslova nad polovicama */
-        .cap-levo, .cap-desno { text-align: center; }
+        /* Naslova stojita nad svojimi stevilkami, torej poravnana desno kot one.
+           Znak za evro stoji enkrat, v koloni ikon. */
+        .cap-levo, .cap-desno { text-align: right; }
+        .cap-evro {
+            text-align: center;
+            font-weight: 700;
+        }
         .result-value {
             font-size: 21px;
             font-weight: bold;
-            color: #3730a3;
+            color: #4f46e5;   /* enaka barva kot napisi in levi zneski */
         }
         .result-sum {
             margin-top: 12px;
@@ -450,9 +455,9 @@
             <div class="col col-plain">
                 <div class="result-box">
                     <div class="result-caption">
-                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-evro">€</span>
                         <span class="cap-levo">NETO</span>
-                        <span class="cap-desno">BRUTO (€)</span>
+                        <span class="cap-desno">BRUTO</span>
                     </div>
                     <div class="result-item">
                         <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
@@ -465,7 +470,7 @@
                         <div class="result-value tot-taxed-1" id="res3">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
                         <div class="result-osnova osn-total-1">0</div>
                         <div class="result-value tot-total-1" id="restot1">0</div>
                     </div>
@@ -521,9 +526,9 @@
             <div class="col col-plain">
                 <div class="result-box">
                     <div class="result-caption">
-                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-evro">€</span>
                         <span class="cap-levo">NETO</span>
-                        <span class="cap-desno">BRUTO (€)</span>
+                        <span class="cap-desno">BRUTO</span>
                     </div>
                     <div class="result-item">
                         <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
@@ -536,7 +541,7 @@
                         <div class="result-value tot-taxed-1">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
                         <div class="result-osnova osn-total-1">0</div>
                         <div class="result-value tot-total-1">0</div>
                     </div>
@@ -605,9 +610,9 @@
             <div class="col col-plain">
                 <div class="result-box">
                     <div class="result-caption">
-                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-evro">€</span>
                         <span class="cap-levo">BRUTO</span>
-                        <span class="cap-desno">NETO (€)</span>
+                        <span class="cap-desno">NETO</span>
                     </div>
                     <div class="result-item">
                         <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
@@ -620,7 +625,7 @@
                         <div class="result-value tot-taxed-2" id="res4">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
                         <div class="result-osnova osn-total-2">0</div>
                         <div class="result-value tot-total-2" id="restot2">0</div>
                     </div>
@@ -676,9 +681,9 @@
             <div class="col col-plain">
                 <div class="result-box">
                     <div class="result-caption">
-                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-evro">€</span>
                         <span class="cap-levo">BRUTO</span>
-                        <span class="cap-desno">NETO (€)</span>
+                        <span class="cap-desno">NETO</span>
                     </div>
                     <div class="result-item">
                         <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
@@ -691,7 +696,7 @@
                         <div class="result-value tot-taxed-2">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
                         <div class="result-osnova osn-total-2">0</div>
                         <div class="result-value tot-total-2">0</div>
                     </div>
