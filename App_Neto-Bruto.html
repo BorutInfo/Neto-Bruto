@@ -32,7 +32,7 @@
 
         .calc-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr) 0.8fr;
+            grid-template-columns: repeat(5, 1fr);   /* Povzetek je enako sirok kot ostali stolpci */
             gap: 15px;
             align-items: start;
         }
@@ -263,7 +263,6 @@
             box-sizing: border-box;
         }
         .result-caption {
-            text-align: center;   /* BRUTO / NETO stoji na sredini */
             color: #4f46e5;
             font-size: 16px;
             font-weight: 600;
@@ -273,16 +272,42 @@
             padding-bottom: 6px;
             border-bottom: 1px solid #c7d2fe;
         }
+        /* Vsaka vrstica Povzetka ima isto razdelitev, zato se stevilke same
+           poravnajo druga pod drugo - tudi vrstica s sestevkom. */
+        .result-item,
+        .result-caption {
+            display: grid;
+            grid-template-columns: 22px 1fr 1fr;
+            gap: 8px;
+            align-items: baseline;
+        }
         .result-item { margin-bottom: 10px; }
         .result-item:last-child { margin-bottom: 0; }
-        .result-box label {
-            text-align: left;   /* napisi levo, zneski pod njimi ostanejo desno */
-            color: #4f46e5;
+
+        /* Ikone stojijo zunaj prostora za stevilke, skrajno levo */
+        .ikona {
             font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            font-weight: 700;
+            color: #4f46e5;
+            text-align: center;
+            line-height: 1;
         }
+        .ikona-neobdavcen { text-decoration: line-through; }
+
+        /* Leva polovica: vnesena osnova, brez znaka za evro */
+        .result-osnova {
+            font-family: "Courier New", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+            white-space: nowrap;
+            font-size: 21px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+        .result-sum .result-osnova { font-size: 24px; }
+
+        /* Naslova nad polovicama */
+        .cap-levo, .cap-desno { text-align: center; }
         .result-value {
             font-size: 21px;
             font-weight: bold;
@@ -293,7 +318,7 @@
             padding-top: 10px;
             border-top: 2px solid #c7d2fe;
         }
-        .result-sum .result-value { font-size: 28px; }   /* SKUPAJ ostane večji */
+        .result-sum .result-value { font-size: 24px; }   /* vrstica seštevka ostane večja, a gre skozi širino */
         .result-value.result-na {
             font-size: 16px;
             color: #b91c1c;
@@ -307,6 +332,7 @@
             body { padding: 6px; }
             .container { padding: 10px; border-radius: 8px; }
             .col { padding: 10px 12px; }
+            .col-plain { padding: 0; }   /* sicer bi bil Povzetek za 24 px ozji od ostalih */
 
             /* Naslov harmonike in znesek eden POD drugim, ne eden ob drugem.
                Tako si ne delita sirine in se ne moreta prekrivati. */
@@ -340,14 +366,7 @@
             }
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
-            .result-item {
-                margin-bottom: 4px;
-                display: flex;                    /* napis levo, znesek desno, ista vrstica */
-                justify-content: space-between;
-                align-items: baseline;
-                gap: 10px;
-            }
-            .result-box label { margin-bottom: 0; }
+            .result-item { margin-bottom: 4px; }
             .result-sum { margin-top: 8px; padding-top: 6px; }
 
             .col.zaprt > .col-header {
@@ -430,18 +449,25 @@
 
             <div class="col col-plain">
                 <div class="result-box">
-                    <div class="result-caption">BRUTO</div>
-                    <div class="result-item">
-                        <label>Neobdavčen</label>
-                        <div class="result-value tot-untaxed-1" id="res1">0.00 €</div>
+                    <div class="result-caption">
+                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-levo">NETO</span>
+                        <span class="cap-desno">BRUTO (€)</span>
                     </div>
                     <div class="result-item">
-                        <label>Obdavčen</label>
-                        <div class="result-value tot-taxed-1" id="res3">0.00 €</div>
+                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
+                        <div class="result-osnova osn-untaxed-1">0</div>
+                        <div class="result-value tot-untaxed-1" id="res1">0</div>
+                    </div>
+                    <div class="result-item">
+                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
+                        <div class="result-osnova osn-taxed-1">0</div>
+                        <div class="result-value tot-taxed-1" id="res3">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <label>Skupaj</label>
-                        <div class="result-value tot-total-1" id="restot1">0.00 €</div>
+                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <div class="result-osnova osn-total-1">0</div>
+                        <div class="result-value tot-total-1" id="restot1">0</div>
                     </div>
                 </div>
             </div>
@@ -494,18 +520,25 @@
 
             <div class="col col-plain">
                 <div class="result-box">
-                    <div class="result-caption">BRUTO</div>
-                    <div class="result-item">
-                        <label>Neobdavčen</label>
-                        <div class="result-value tot-untaxed-1">0.00 €</div>
+                    <div class="result-caption">
+                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-levo">NETO</span>
+                        <span class="cap-desno">BRUTO (€)</span>
                     </div>
                     <div class="result-item">
-                        <label>Obdavčen</label>
-                        <div class="result-value tot-taxed-1">0.00 €</div>
+                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
+                        <div class="result-osnova osn-untaxed-1">0</div>
+                        <div class="result-value tot-untaxed-1">0</div>
+                    </div>
+                    <div class="result-item">
+                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
+                        <div class="result-osnova osn-taxed-1">0</div>
+                        <div class="result-value tot-taxed-1">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <label>Skupaj</label>
-                        <div class="result-value tot-total-1">0.00 €</div>
+                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <div class="result-osnova osn-total-1">0</div>
+                        <div class="result-value tot-total-1">0</div>
                     </div>
                 </div>
             </div>
@@ -571,18 +604,25 @@
 
             <div class="col col-plain">
                 <div class="result-box">
-                    <div class="result-caption">NETO</div>
-                    <div class="result-item">
-                        <label>Neobdavčen</label>
-                        <div class="result-value tot-untaxed-2" id="res2">0.00 €</div>
+                    <div class="result-caption">
+                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-levo">BRUTO</span>
+                        <span class="cap-desno">NETO (€)</span>
                     </div>
                     <div class="result-item">
-                        <label>Obdavčen</label>
-                        <div class="result-value tot-taxed-2" id="res4">0.00 €</div>
+                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
+                        <div class="result-osnova osn-untaxed-2">0</div>
+                        <div class="result-value tot-untaxed-2" id="res2">0</div>
+                    </div>
+                    <div class="result-item">
+                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
+                        <div class="result-osnova osn-taxed-2">0</div>
+                        <div class="result-value tot-taxed-2" id="res4">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <label>Skupaj</label>
-                        <div class="result-value tot-total-2" id="restot2">0.00 €</div>
+                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <div class="result-osnova osn-total-2">0</div>
+                        <div class="result-value tot-total-2" id="restot2">0</div>
                     </div>
                 </div>
             </div>
@@ -635,18 +675,25 @@
 
             <div class="col col-plain">
                 <div class="result-box">
-                    <div class="result-caption">NETO</div>
-                    <div class="result-item">
-                        <label>Neobdavčen</label>
-                        <div class="result-value tot-untaxed-2">0.00 €</div>
+                    <div class="result-caption">
+                        <span class="cap-prazno" aria-hidden="true"></span>
+                        <span class="cap-levo">BRUTO</span>
+                        <span class="cap-desno">NETO (€)</span>
                     </div>
                     <div class="result-item">
-                        <label>Obdavčen</label>
-                        <div class="result-value tot-taxed-2">0.00 €</div>
+                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
+                        <div class="result-osnova osn-untaxed-2">0</div>
+                        <div class="result-value tot-untaxed-2">0</div>
+                    </div>
+                    <div class="result-item">
+                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
+                        <div class="result-osnova osn-taxed-2">0</div>
+                        <div class="result-value tot-taxed-2">0</div>
                     </div>
                     <div class="result-item result-sum">
-                        <label>Skupaj</label>
-                        <div class="result-value tot-total-2">0.00 €</div>
+                        <span class="ikona" role="img" aria-label="Skupaj">&#931;</span>
+                        <div class="result-osnova osn-total-2">0</div>
+                        <div class="result-value tot-total-2">0</div>
                     </div>
                 </div>
             </div>
@@ -739,6 +786,14 @@
 
         function fmtMoney(n) {
             return isShowable(n) ? n.toFixed(2) + ' €' : 'ni izračunljivo';
+        }
+
+        // Povzetek je pripomoček za odločanje, ne računovodstvo: decimalke se
+        // ODREŽEJO (proti nič), ne zaokrožijo - 1298,99 se izpiše kot 1298.
+        // Znak za evro stoji enkrat v glavi, zato ga tu ni.
+        const NEIZRACUNLJIVO = '???';
+        function fmtCelo(n) {
+            return isShowable(n) ? String(Math.trunc(n)) : NEIZRACUNLJIVO;
         }
 
         // Informativni vrstici pod seštevkom stolpca:
@@ -1026,7 +1081,7 @@
         function showTotal(cls, n) {
             const ok = isShowable(n);
             document.querySelectorAll('.' + cls).forEach(el => {
-                el.innerText = ok ? n.toFixed(2) + ' €' : 'ni izračunljivo';
+                el.innerText = fmtCelo(n);
                 if (el.classList) {
                     if (ok) el.classList.remove('result-na');
                     else el.classList.add('result-na');
@@ -1036,9 +1091,11 @@
 
         function calculateAll() {
             const results = {};
+            const osnove = {};   // vnesene osnove za levo polovico Povzetka
 
             CALCS.forEach(c => {
                 const base = getNonNeg(c.baseId);
+                osnove[c.n] = base;
                 // Obdavčen prihodek nima stolpca z davki -> faktor ostane 1 (davek je že plačan)
                 const factor = taxFactor(c.n);
                 const costs = sumCosts(c.n);
@@ -1081,6 +1138,11 @@
                 showTotal('tot-untaxed-' + t.n, untaxed);
                 showTotal('tot-taxed-' + t.n, taxed);
                 showTotal('tot-total-' + t.n, total);
+
+                // Leva polovica Povzetka: vnesene osnove in njuna vsota
+                showTotal('osn-untaxed-' + t.n, osnove[t.untaxed]);
+                showTotal('osn-taxed-' + t.n, osnove[t.taxed]);
+                showTotal('osn-total-' + t.n, osnove[t.untaxed] + osnove[t.taxed]);
             });
 
             saveToStorage();
