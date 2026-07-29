@@ -1339,11 +1339,28 @@
             // Med tipkanjem je besedilo surovo, zato je zdaj pravi trenutek,
             // da si zapomnimo strojno vrednost polja.
             if (jeStevilskoPolje(t)) {
-                // Varovalka za vejico, ki je tipkovnica ni zavrnila (prilepljeno
-                // besedilo, tipkovnice brez pike). Vejico PRETVORIMO v piko in je
-                // ne izbrišemo: "1,5" mora ostati 1,5 in ne postati 15.
-                if (String(t.value).indexOf(',') !== -1) {
-                    t.value = String(t.value).replace(/,/g, '.');
+                // V polju vejice ni: takoj postane pika. Tipke ne zavračamo, ker
+                // iPhone pri številski tipkovnici ponuja SAMO vejico - z zavrnitvijo
+                // decimalk na telefonu sploh ne bi bilo mogoče vpisati.
+                // Pretvorimo, ne izbrišemo: "1,5" mora ostati 1,5 in ne postati 15.
+                const besedilo = String(t.value);
+                if (besedilo.indexOf(',') !== -1) {
+                    if (besedilo.indexOf('.') === -1) {
+                        // Običajno tipkanje: "1," -> "1."  in  "1,5" -> "1.5".
+                        // Zamenjava je znak za znak, zato kazalec ostane, kjer je bil.
+                        const zac = t.selectionStart, kon = t.selectionEnd;
+                        t.value = besedilo.replace(/,/g, '.');
+                        if (typeof zac === 'number' && typeof t.setSelectionRange === 'function') {
+                            try { t.setSelectionRange(zac, kon); } catch (err) { /* ni bistveno */ }
+                        }
+                    } else {
+                        // Pika IN vejica hkrati: prilepljen tuj ali oblikovan zapis
+                        // ("1.234,56"). Vrednost prepustimo parseNum, ki tak zapis
+                        // razume, polje pa prepišemo v strojno obliko. Brez tega bi
+                        // "1.234,56" po zamenjavi vejice postal "1.234.56" = 123456.
+                        // Odvečno ločilo na koncu ("1.5,") najprej odstranimo.
+                        t.value = String(parseNum(besedilo.replace(/[.,]+$/, '')));
+                    }
                 }
                 if (t.setAttribute) {
                     t.setAttribute(ATRIBUT_VREDNOST, String(parseNum(t.value)));
@@ -1396,13 +1413,6 @@
             const t = e.target;
             if (!jeStevilskoPolje(t)) return;
             t.value = oblikovanoPolje(t.value);
-        });
-
-        // Decimalno ločilo se vtipka s piko; vejica v teh poljih ne stori ničesar.
-        document.addEventListener('keydown', function (e) {
-            if (!e || e.key !== ',') return;
-            if (!jeStevilskoPolje(e.target)) return;
-            if (typeof e.preventDefault === 'function') e.preventDefault();
         });
 
         // Klik na naslov odpre ali zapre stolpec.
