@@ -250,6 +250,57 @@
             border-top: 1px dashed #ced4da;
         }
 
+        /* ---------- Barve sklopov ----------
+           Sklop je ena .calc-grid. Zgornji je NEOBDAVCEN (davek se sele odsteje,
+           topla barva), spodnji OBDAVCEN (davek je ze placan, hladna barva).
+           Barva povezuje stolpce v sklop, zato jo dobijo vsi razen Povzetka
+           (.col-plain), ki ima svojo vijolicno in ostane najmocnejsi na strani.
+
+           Prvi stolpec sklopa je osnova - izhodisce izracuna in na telefonu
+           edini privzeto odprt. Poudarjen je z ISTIM odtenkom, le mocnejsim:
+           druga barva bi ga iz sklopa izlocila, namesto da ga v njem poudari.
+           Ujema se s prvim otrokom mreze, ker osnova v HTML vedno stoji prva. */
+
+        /* --- neobdavcen sklop: topla --- */
+        .calc-grid:not(.row-second) .col:not(.col-plain) {
+            background: #fffbf2;
+            border-color: #f0e0c8;
+        }
+        .calc-grid:not(.row-second) .col:not(.col-plain) > .col-header,
+        .calc-grid:not(.row-second) .col:not(.col-plain) > .col-header::after {
+            color: #a35d09;
+        }
+        .calc-grid:not(.row-second) .col:first-child {
+            background: #fdefd8;
+            border-color: #dfc08a;
+        }
+        .calc-grid:not(.row-second) .col:first-child > .col-header {
+            color: #8a4d05;
+        }
+        .calc-grid:not(.row-second) .col:first-child:not(.zaprt) > .col-header {
+            border-bottom: 2px solid #a35d09;
+        }
+
+        /* --- obdavcen sklop: hladna --- */
+        .row-second .col:not(.col-plain) {
+            background: #f2fbf9;
+            border-color: #cbe8e2;
+        }
+        .row-second .col:not(.col-plain) > .col-header,
+        .row-second .col:not(.col-plain) > .col-header::after {
+            color: #0d6b60;
+        }
+        .row-second .col:first-child {
+            background: #ddf1ec;
+            border-color: #9ccec4;
+        }
+        .row-second .col:first-child > .col-header {
+            color: #0a5850;
+        }
+        .row-second .col:first-child:not(.zaprt) > .col-header {
+            border-bottom: 2px solid #0d6b60;
+        }
+
         .result-box {
             text-align: right;
             background: #eef2ff;
