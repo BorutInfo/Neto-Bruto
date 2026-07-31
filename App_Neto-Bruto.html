@@ -127,6 +127,25 @@
             display: block;
         }
 
+        /* ---------- Stolpec 4: napis in polje v isti vrstici (31. 7. 2026) ----------
+           Prvi stolpec mreze je max-content, zato sirino napisov doloci najdaljsi
+           med njimi SAM - v kodi ni izmisljene stevilke. Ce se besedila kdaj
+           spremenijo, se poravnava prilagodi brez posega v CSS.
+           minmax(0, 1fr) na drugem stolpcu poskrbi, da se pri ozkem oknu skrci
+           POLJE, napis pa ostane cel in nic ne uide cez rob kartice.
+           Ovoj mora ostati NEPOSREDEN otrok .col, sicer ga harmonika
+           (.col.zaprt > * { display: none }) ob zaprtju ne skrije. */
+        .pot-polja {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            align-items: center;
+            gap: 12px 8px;   /* 12 px med vrsticami (enako kot .col), 8 px med napisom in poljem */
+        }
+        .pot-polja label {
+            text-align: left;
+            margin-bottom: 0;   /* -5px je stiskal napis k polju SPODAJ; v vrstici je odvec */
+        }
+
         input[type="text"], input[type="number"] {
             padding: 8px;
             border: 1px solid #ccc;
@@ -502,8 +521,7 @@
         <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
         <div class="calc-grid">
             <div class="col">
-                <div class="col-header">1. Neobdavčen prihodek</div>
-                <label>Neto</label>
+                <div class="col-header">1. Neobdavčen Neto</div>
                 <input type="text" inputmode="decimal" class="num-field nonneg" id="net1" value="0">
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
@@ -537,14 +555,16 @@
 
             <div class="col">
                 <div class="col-header">4. Potni stroški</div>
-                <label>km</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="km1" value="0">
-                <label>Poraba (l / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba1" value="0">
-                <label>Cena goriva (€ / l)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo1" value="0">
-                <label>Amortizacija (€ / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="amort1" value="0">
+                <div class="pot-polja">
+                    <label>km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km1" value="0">
+                    <label>Poraba l/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba1" value="0">
+                    <label title="Cena goriva.">Cena g. €/l</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo1" value="0">
+                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort1" value="0">
+                </div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj pot</div>
                     <div class="mini-result" id="sum-travel-1">0,00 €</div>
@@ -582,8 +602,7 @@
         <!-- Vrstica 2: obdavčen prihodek (davek je že plačan, zato ga ni) -->
         <div class="calc-grid row-second">
             <div class="col">
-                <div class="col-header">1. Obdavčen prihodek</div>
-                <label>Neto</label>
+                <div class="col-header">1. Obdavčen Neto</div>
                 <input type="text" inputmode="decimal" class="num-field nonneg" id="net3" value="0">
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
@@ -608,14 +627,16 @@
 
             <div class="col">
                 <div class="col-header">4. Potni stroški</div>
-                <label>km</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="km3" value="0">
-                <label>Poraba (l / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba3" value="0">
-                <label>Cena goriva (€ / l)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo3" value="0">
-                <label>Amortizacija (€ / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="amort3" value="0">
+                <div class="pot-polja">
+                    <label>km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km3" value="0">
+                    <label>Poraba l/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba3" value="0">
+                    <label title="Cena goriva.">Cena g. €/l</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo3" value="0">
+                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort3" value="0">
+                </div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj pot</div>
                     <div class="mini-result" id="sum-travel-3">0,00 €</div>
@@ -657,8 +678,7 @@
         <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
         <div class="calc-grid">
             <div class="col">
-                <div class="col-header">1. Neobdavčen prihodek</div>
-                <label>Bruto</label>
+                <div class="col-header">1. Neobdavčen Bruto</div>
                 <input type="text" inputmode="decimal" class="num-field nonneg" id="gross2" value="0">
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
@@ -692,14 +712,16 @@
 
             <div class="col">
                 <div class="col-header">4. Potni stroški</div>
-                <label>km</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="km2" value="0">
-                <label>Poraba (l / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba2" value="0">
-                <label>Cena goriva (€ / l)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo2" value="0">
-                <label>Amortizacija (€ / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="amort2" value="0">
+                <div class="pot-polja">
+                    <label>km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km2" value="0">
+                    <label>Poraba l/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba2" value="0">
+                    <label title="Cena goriva.">Cena g. €/l</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo2" value="0">
+                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort2" value="0">
+                </div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj pot</div>
                     <div class="mini-result" id="sum-travel-2">0,00 €</div>
@@ -737,8 +759,7 @@
         <!-- Vrstica 2: obdavčen prihodek (davek je že plačan, zato ga ni) -->
         <div class="calc-grid row-second">
             <div class="col">
-                <div class="col-header">1. Obdavčen prihodek</div>
-                <label>Bruto</label>
+                <div class="col-header">1. Obdavčen Bruto</div>
                 <input type="text" inputmode="decimal" class="num-field nonneg" id="gross4" value="0">
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
@@ -763,14 +784,16 @@
 
             <div class="col">
                 <div class="col-header">4. Potni stroški</div>
-                <label>km</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="km4" value="0">
-                <label>Poraba (l / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba4" value="0">
-                <label>Cena goriva (€ / l)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo4" value="0">
-                <label>Amortizacija (€ / 100km)</label>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="amort4" value="0">
+                <div class="pot-polja">
+                    <label>km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km4" value="0">
+                    <label>Poraba l/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba4" value="0">
+                    <label title="Cena goriva.">Cena g. €/l</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo4" value="0">
+                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
+                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort4" value="0">
+                </div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj pot</div>
                     <div class="mini-result" id="sum-travel-4">0,00 €</div>
