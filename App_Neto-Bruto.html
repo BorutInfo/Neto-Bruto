@@ -522,7 +522,7 @@
         <div class="calc-grid">
             <div class="col">
                 <div class="col-header">1. Neobdavčen Neto</div>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="net1" value="0">
+                <div id="base-container-1"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-1">0,00 €</div>
@@ -603,7 +603,7 @@
         <div class="calc-grid row-second">
             <div class="col">
                 <div class="col-header">1. Obdavčen Neto</div>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="net3" value="0">
+                <div id="base-container-3"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-3">0,00 €</div>
@@ -679,7 +679,7 @@
         <div class="calc-grid">
             <div class="col">
                 <div class="col-header">1. Neobdavčen Bruto</div>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gross2" value="0">
+                <div id="base-container-2"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-2">0,00 €</div>
@@ -760,7 +760,7 @@
         <div class="calc-grid row-second">
             <div class="col">
                 <div class="col-header">1. Obdavčen Bruto</div>
-                <input type="text" inputmode="decimal" class="num-field nonneg" id="gross4" value="0">
+                <div id="base-container-4"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-4">0,00 €</div>
@@ -837,11 +837,15 @@
         // Privzeta vsebina stolpcev: prva vrstica ima ime, nadaljnje so prazne, vsi zneski 0
         const DEFAULT_TAXES = [{ name: 'Davek', val: 0 }, { name: '', val: 0 }];
         const DEFAULT_COSTS = [{ name: 'Stroški', val: 0 }, { name: '', val: 0 }];
+        const DEFAULT_BASES = [{ name: 'Honorar', val: 0 }, { name: '', val: 0 }];
 
         const TRAVEL_FIELDS = ['km', 'poraba', 'gorivo', 'amort'];
 
         // Štirje izračuni: vsaka tabela ima vrstico z neobdavčenim in vrstico z obdavčenim prihodkom.
         // Obdavčen prihodek (taxed: true) nima stolpca z davki - davek je že plačan.
+        // baseId je oznaka NEKDANJEGA enega samega polja osnove. Odslej je osnova stolpec
+        // vrstic (kot stroški), zato ime živi le še kot ključ, pod katerim so shranjeni
+        // starejši podatki - glej prevod v loadFromStorage.
         const CALCS = [
             { n: 1, table: 1, taxed: false, baseId: 'net1',   dir: 'toGross' },
             { n: 3, table: 1, taxed: true,  baseId: 'net3',   dir: 'toGross' },
@@ -1067,14 +1071,22 @@
             return m ? parseInt(m[1], 10) : 1;
         }
 
+        // Tri vrste vrstic z enakim vedenjem. Preglednica je krajsa in bolj varna od
+        // verige pogojev: nova vrsta se doda na enem mestu. Funkcije so deklarirane
+        // nize v datoteki, kar je v redu - deklaracije veljajo v celotnem sklopu.
+        const VRSTICE = {
+            base: { add: addBaseRow, remove: removeBaseRow },
+            tax:  { add: addTaxRow,  remove: removeTaxRow },
+            cost: { add: addCostRow, remove: removeCostRow }
+        };
+
         function setRowButton(btn, isLast, kind, containerId) {
-            const calcNum = calcNumOf(containerId);
             btn.className = 'btn-action ' + (isLast ? 'btn-add' : 'btn-remove');
             btn.innerText = isLast ? '+' : '-';
             btn.title = isLast ? 'Dodaj vrstico' : 'Odstrani vrstico';
             btn.onclick = isLast
-                ? function () { kind === 'tax' ? addTaxRow(containerId) : addCostRow(containerId); }
-                : function () { kind === 'tax' ? removeTaxRow(btn) : removeCostRow(btn); };
+                ? function () { VRSTICE[kind].add(containerId); }
+                : function () { VRSTICE[kind].remove(btn); };
         }
 
         function refreshButtons(containerId, kind) {
@@ -1083,6 +1095,47 @@
                 const btn = row.querySelector('button');
                 if (btn) setRowButton(btn, i === rows.length - 1, kind, containerId);
             });
+        }
+
+        // ---------- Osnova (honorarji) ----------
+        // Isti vzorec kot stroški: vsaka vrstica ima ime in znesek, zneski se seštejejo.
+        // Ime (npr. delodajalec) vpiše uporabnik in na izračun ne vpliva.
+        // Rezultat je enak kot pri enem samem znesku: davek je množenje, zato je
+        // vseeno, ali seštejemo pred obračunom ali po njem (800 + 400 = 1200).
+        function makeBaseRow(name, val, calcNum) {
+            const row = document.createElement('div');
+            row.className = 'cost-row';
+            row.innerHTML = `
+                <input type="text" class="name-field" value="${escapeHtml(name)}">
+                <input type="text" inputmode="decimal" class="base-val-${calcNum} num-field nonneg" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
+                <button class="btn-action"></button>
+            `;
+            return row;
+        }
+
+        function addBaseRow(containerId) {
+            const calcNum = calcNumOf(containerId);
+            document.getElementById(containerId).appendChild(makeBaseRow('', 0, calcNum));
+            refreshButtons(containerId, 'base');
+            calculateAll();
+        }
+
+        function removeBaseRow(btn) {
+            const row = btn.parentElement;
+            if (!row || !row.parentElement) return;
+            const containerId = row.parentElement.id;
+            row.remove();
+            refreshButtons(containerId, 'base');
+            calculateAll();
+        }
+
+        function rebuildBases(containerId, calcNum, basesArr) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            basesArr.forEach(item => {
+                container.appendChild(makeBaseRow(safeName(item), safeVal(item), calcNum));
+            });
+            refreshButtons(containerId, 'base');
         }
 
         // ---------- Stroški ----------
@@ -1238,7 +1291,7 @@
         function saveToStorage() {
             const data = {};
             CALCS.forEach(c => {
-                data[c.baseId] = rawVal(c.baseId);
+                data['bases' + c.n] = collectRows(`#base-container-${c.n} .cost-row`, 'base-val-' + c.n);
                 TRAVEL_FIELDS.forEach(f => { data[f + c.n] = rawVal(f + c.n); });
                 data['costs' + c.n] = collectRows(`#costs-container-${c.n} .cost-row`, 'cost-val-' + c.n);
                 if (!c.taxed) {
@@ -1277,7 +1330,14 @@
             const data = readStorage() || {};
 
             CALCS.forEach(c => {
-                setVal(c.baseId, data[c.baseId]);
+                // Prevod starejsih podatkov: osnova je bila ena sama stevilka (npr. net1),
+                // odslej je seznam vrstic. Znesek postavimo v prvo vrstico, ime pa vpise
+                // uporabnik sam. Brez tega bi zneski ob prvem odprtju izginili.
+                const legacyBases = (data[c.baseId] !== undefined && data[c.baseId] !== null)
+                    ? [{ name: 'Honorar', val: data[c.baseId] }, { name: '', val: 0 }]
+                    : DEFAULT_BASES;
+                rebuildBases('base-container-' + c.n, c.n, rowsOr(data['bases' + c.n], legacyBases));
+
                 TRAVEL_FIELDS.forEach(f => setVal(f + c.n, data[f + c.n]));
 
                 rebuildCosts('costs-container-' + c.n, c.n, rowsOr(data['costs' + c.n], DEFAULT_COSTS));
@@ -1303,6 +1363,13 @@
                 factor *= (1 - p / 100);
             });
             return factor;
+        }
+
+        // Osnova je lahko samo 0 ali več (negativen honorar ni dovoljen)
+        function sumBases(calcNum) {
+            let sum = 0;
+            document.querySelectorAll('.base-val-' + calcNum).forEach(el => { sum += Math.max(0, vrednostPolja(el)); });
+            return sum;
         }
 
         // Stroški so lahko samo 0 ali več (negativen strošek ni dovoljen)
@@ -1334,7 +1401,7 @@
             const osnove = {};   // vnesene osnove za levo polovico Povzetka
 
             CALCS.forEach(c => {
-                const base = getNonNeg(c.baseId);
+                const base = sumBases(c.n);
                 osnove[c.n] = base;
                 // Obdavčen prihodek nima stolpca z davki -> faktor ostane 1 (davek je že plačan)
                 const factor = taxFactor(c.n);
