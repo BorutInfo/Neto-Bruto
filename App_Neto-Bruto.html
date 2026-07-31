@@ -147,7 +147,9 @@
            Safari PRENEHA sam risati zapolnjeni del in zamenjave zanj v CSS ni.
            Zato je proga preliv, mejo med zapolnjenim in praznim delom (--del)
            pa nastavi koda ob vsakem premiku (glej osveziProgo).
-           Siva: #d3d3d3 (privzeta v brskalniku) potemnjena za 30 % -> #949494. */
+           Siva: #d3d3d3 (privzeta v brskalniku), potemnjena za 8 % -> #c2c2c2.
+           Pot do te vrednosti: 30 % in 15 % sta bila pretemna, preizkuseno
+           na napravi 29. 7. 2026. */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -161,7 +163,7 @@
             border-radius: 2px;
             background: linear-gradient(to right,
                         #3498db 0 var(--del, 0%),
-                        #949494 var(--del, 0%) 100%);
+                        #c2c2c2 var(--del, 0%) 100%);
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -177,7 +179,7 @@
         input[type="range"]::-moz-range-track {
             height: 4px;
             border-radius: 2px;
-            background: #949494;
+            background: #c2c2c2;
         }
         input[type="range"]::-moz-range-progress {
             height: 4px;
