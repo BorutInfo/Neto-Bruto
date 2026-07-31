@@ -1528,7 +1528,12 @@
         // ni treba dodajati nobenih novih oznak. Polje s končnimi zneski in prazno
         // mesto v drugi vrstici te oznake nimata, zato harmonika nista.
         const POGLED_KLJUC = 'kalkulatorPogled';   // ločeno od podatkov o izračunu
-        const OZEK_ZASLON = '(max-width: 900px)';
+
+        // Prva postavka zapisa pove, katere različice je. Zapis brez nje je starejši
+        // od pravila "privzeto je vse zaprto" (31. 7. 2026) in opisuje razporeditev,
+        // ki je ne poznamo več - zato ga prezremo in uporabimo privzeto stanje.
+        // Isti prijem uporabi tudi naslednjič, ko zapis spremeni obliko.
+        const OZNAKA_ZAPISA = 'pogled-2';
 
         function imaRazred(el, ime) {
             if (!el || !el.className) return false;
@@ -1582,19 +1587,10 @@
             });
         }
 
-        function jeOzekZaslon() {
-            try {
-                return !!(typeof window !== 'undefined' && window.matchMedia &&
-                          window.matchMedia(OZEK_ZASLON).matches);
-            } catch (e) {
-                return false;
-            }
-        }
-
         // Zapis vsebuje dvoje: kljuce ODPRTIH stolpcev in kljuce ZAPRTIH sklopov
         // (ti s predpono). Razlog za razliko je opisan pri ZAPRT_PREDPONA.
         function shraniPogled() {
-            const zapis = [];
+            const zapis = [OZNAKA_ZAPISA];
             document.querySelectorAll('.col').forEach(col => {
                 const k = kljucStolpca(col);
                 if (k && !imaRazred(col, 'zaprt')) zapis.push(k);
@@ -1609,34 +1605,34 @@
             }
         }
 
-        // Brez shranjenega (ali ob poškodovanem) stanju velja privzeto:
-        // na ozkem zaslonu je odprt samo stolpec z osnovo, na širokem vse.
+        // PRIVZETO JE VSE ZAPRTO (31. 7. 2026), na vsaki širini zaslona enako.
+        // Uporabnik odpre, kar potrebuje, in aplikacija si to zapomni.
+        //
+        // Zapis je uporaben le, če je seznam IN ima oznako različice. Trije primeri,
+        // ko uporaben ni - zapisa ni, prazen je, pokvarjen je - dajo isti izid:
+        // aplikacija ne ugiba, ampak vse zapre.
         function naloziPogled() {
             let seznam = null;
             try {
                 const raw = localStorage.getItem(POGLED_KLJUC);
                 if (raw) {
                     const p = JSON.parse(raw);
-                    if (Array.isArray(p)) seznam = p;
+                    if (Array.isArray(p) && p.indexOf(OZNAKA_ZAPISA) !== -1) seznam = p;
                 }
             } catch (e) {
                 seznam = null;
             }
 
-            const ozek = jeOzekZaslon();
             document.querySelectorAll('.col').forEach(col => {
                 const k = kljucStolpca(col);
                 if (!k) return;
-                const odprt = seznam
-                    ? seznam.indexOf(k) !== -1
-                    : (!ozek || k.indexOf('sum-base-') === 0);
-                nastaviStolpec(col, odprt);
+                nastaviStolpec(col, !!seznam && seznam.indexOf(k) !== -1);
             });
 
-            // Sklop je zaprt SAMO, ce je izrecno tako zapisan. Brez zapisa
-            // (ali s starim zapisom, ki sklopov ne pozna) sta oba odprta.
+            // Sklopi se zapisujejo obrnjeno (zabeleži se ZAPRTE), zato brez
+            // uporabnega zapisa ni podatka o njih - in takrat velja privzeto: zaprto.
             zaVsakSklop((c, k) => {
-                const zaprt = !!seznam && seznam.indexOf(ZAPRT_PREDPONA + k) !== -1;
+                const zaprt = seznam ? seznam.indexOf(ZAPRT_PREDPONA + k) !== -1 : true;
                 nastaviStolpec(c, !zaprt);
             });
         }
