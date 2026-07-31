@@ -142,9 +142,54 @@
             outline: none;
         }
 
+        /* ---------- Drsniki pri davkih ----------
+           Neaktivna proga je bila prebleda. Ko pa progi prevzamemo videz,
+           Safari PRENEHA sam risati zapolnjeni del in zamenjave zanj v CSS ni.
+           Zato je proga preliv, mejo med zapolnjenim in praznim delom (--del)
+           pa nastavi koda ob vsakem premiku (glej osveziProgo).
+           Siva: #d3d3d3 (privzeta v brskalniku) potemnjena za 30 % -> #949494. */
         input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
             width: 100%;
             margin-top: 5px;
+            height: 20px;          /* prostor za ročico; brez tega bi se polje sesedlo */
+            background: transparent;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(to right,
+                        #3498db 0 var(--del, 0%),
+                        #949494 var(--del, 0%) 100%);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #ccc;   /* enako debela kot obroba vnosnih polj */
+            margin-top: -6px;         /* (4 - 16) / 2: ročica na sredini proge */
+        }
+        /* Firefox zapolnjeni del riše sam, zato tam preliva ne potrebujemo */
+        input[type="range"]::-moz-range-track {
+            height: 4px;
+            border-radius: 2px;
+            background: #949494;
+        }
+        input[type="range"]::-moz-range-progress {
+            height: 4px;
+            border-radius: 2px;
+            background: #3498db;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #ccc;
         }
 
         /* Številska polja poravnamo desno */
@@ -1124,6 +1169,15 @@
             return (Array.isArray(arr) && arr.length) ? arr : fallback;
         }
 
+        // Koliko proge je zapolnjene. Safari zapolnjenega dela ne riše sam,
+        // ko mu progo prebarvamo, zato mu mejo povemo tu.
+        function osveziProgo(slider) {
+            if (!slider || !slider.style) return;
+            const max = parseNum(slider.max) || 1;
+            const del = clamp(parseNum(slider.value) / max, 0, 1) * 100;
+            slider.style.setProperty('--del', del + '%');
+        }
+
         // Drsnik sledi številki; obseg se po potrebi razširi nad privzetih 30 %
         function syncSliderTo(numEl) {
             if (!numEl || !numEl.getAttribute) return;
@@ -1134,6 +1188,7 @@
             const v = clamp(vrednostPolja(numEl), 0, MAX_TAX);
             slider.max = String(Math.max(SLIDER_BASE_MAX, Math.ceil(v)));
             slider.value = String(Math.round(v));   // ročica stoji na celem odstotku
+            osveziProgo(slider);
         }
 
         // ---------- Shranjevanje ----------
@@ -1426,7 +1481,7 @@
                     const pairEl = document.getElementById(pairId);
                     if (pairEl) {
                         if (pairEl.type === 'range') syncSliderTo(t);       // številka -> drsnik
-                        else vpisiSurovo(pairEl, t.value);                  // drsnik -> številka
+                        else { vpisiSurovo(pairEl, t.value); osveziProgo(t); }   // drsnik -> številka
                     }
                 }
             }
