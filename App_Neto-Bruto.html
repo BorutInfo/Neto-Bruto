@@ -30,6 +30,67 @@
             padding-bottom: 8px;
         }
 
+        /* ---------- Harmonika sklopa (31. 7. 2026) ----------
+           Naslov tabele je gumb, ki skrije ali pokaze cel sklop.
+           Puscica stoji ob DESNEM robu, enako kot pri stolpcih - tako so vse
+           puscice na strani v isti navpicnici. Tudi v zaprtem traku.
+           Zaprt trak: ime levo, skupni znesek desno, puscica skrajno desno.
+
+           Sidro za puscico je NASLOV, ne bela kartica. Namenoma: .container
+           na telefonu nosi prilepljen Povzetek in vanj ne posegamo. */
+        h2.sklop-naslov {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 44px;      /* zanesljiv dotik s prstom, enako kot .col-header */
+            padding-right: 24px;   /* prostor za puscico */
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h2.sklop-naslov::after {
+            content: '▾';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            color: #868e96;
+            font-size: 16px;
+        }
+        .container.zaprt > h2.sklop-naslov::after { content: '▸'; }
+
+        /* Ime se pri ozkem zaslonu obreze, da znesek in puscica ostaneta na mestu */
+        .sklop-ime {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Znesek je viden SAMO v zaprtem traku; odprt sklop ga kaze v Povzetku.
+           Ni prepisan - je tretje mesto istega izpisa (razred tot-total-N). */
+        .sklop-znesek {
+            display: none;
+            font-family: "Courier New", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            text-align: right;
+        }
+        .container.zaprt .sklop-znesek { display: block; }
+        .sklop-znesek::after { content: ' €'; }
+        /* Ce rezultat ni izracunljiv, showTotal izpise "???" - takrat evra ni */
+        .sklop-znesek.result-na::after { content: ''; }
+        .sklop-znesek.result-na { color: #b91c1c; }
+
+        /* Zaprt sklop: vidi se samo trak */
+        .container.zaprt > .calc-grid { display: none; }
+        .container.zaprt > h2.sklop-naslov { margin-bottom: 0; }
+
         .calc-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);   /* Povzetek je enako sirok kot ostali stolpci */
@@ -516,7 +577,10 @@
 <body>
 
     <div class="container">
-        <h2>NETO → BRUTO</h2>
+        <h2 class="sklop-naslov">
+            <span class="sklop-ime">NETO → BRUTO</span>
+            <span class="sklop-znesek tot-total-1">0</span>
+        </h2>
 
         <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
         <div class="calc-grid">
@@ -673,7 +737,10 @@
     </div>
 
     <div class="container">
-        <h2>BRUTO → NETO</h2>
+        <h2 class="sklop-naslov">
+            <span class="sklop-ime">BRUTO → NETO</span>
+            <span class="sklop-znesek tot-total-2">0</span>
+        </h2>
 
         <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
         <div class="calc-grid">
@@ -1482,9 +1549,37 @@
             return id || null;
         }
 
+        // Doda ali odstrani razred 'zaprt'. Uporablja se za stolpce IN za sklope -
+        // razred je isti, razlikujejo se le pravila v slogu.
         function nastaviStolpec(col, odprt) {
             if (odprt) col.classList.remove('zaprt');
             else col.classList.add('zaprt');
+        }
+
+        // ---------- Harmonika sklopa (cele tabele) ----------
+        // Kljuc sklopa je oznaka njegovega skupnega zneska ("tot-total-1"), zato
+        // tudi tu v HTML ni novih oznak.
+        //
+        // POZOR - zapisujemo ZAPRTE sklope, ne odprtih. Razlog: shranjeno stanje
+        // iz starejse razlicice o sklopih ne ve nicesar. Ce bi zapisovali odprte,
+        // bi molk starega zapisa pomenil "oba zaprta" in uporabnik bi ob prvem
+        // odprtju videl dva prazna naslova. Tako molk pomeni "oba odprta".
+        const ZAPRT_PREDPONA = 'zaprt:';
+
+        function kljucSklopa(container) {
+            const el = container.querySelector('.sklop-znesek');
+            if (!el || !el.className) return null;
+            const m = String(el.className).match(/tot-total-(\d+)/);
+            return m ? 'sklop-' + m[1] : null;
+        }
+
+        // forEach (ne filter): v brskalniku querySelectorAll vrne NodeList,
+        // ki filtra nima.
+        function zaVsakSklop(fn) {
+            document.querySelectorAll('.container').forEach(c => {
+                const k = kljucSklopa(c);
+                if (k) fn(c, k);
+            });
         }
 
         function jeOzekZaslon() {
@@ -1496,14 +1591,19 @@
             }
         }
 
+        // Zapis vsebuje dvoje: kljuce ODPRTIH stolpcev in kljuce ZAPRTIH sklopov
+        // (ti s predpono). Razlog za razliko je opisan pri ZAPRT_PREDPONA.
         function shraniPogled() {
-            const odprti = [];
+            const zapis = [];
             document.querySelectorAll('.col').forEach(col => {
                 const k = kljucStolpca(col);
-                if (k && !imaRazred(col, 'zaprt')) odprti.push(k);
+                if (k && !imaRazred(col, 'zaprt')) zapis.push(k);
+            });
+            zaVsakSklop((c, k) => {
+                if (imaRazred(c, 'zaprt')) zapis.push(ZAPRT_PREDPONA + k);
             });
             try {
-                localStorage.setItem(POGLED_KLJUC, JSON.stringify(odprti));
+                localStorage.setItem(POGLED_KLJUC, JSON.stringify(zapis));
             } catch (e) {
                 console.error('Stanja stolpcev ni bilo mogoče shraniti', e);
             }
@@ -1531,6 +1631,13 @@
                     ? seznam.indexOf(k) !== -1
                     : (!ozek || k.indexOf('sum-base-') === 0);
                 nastaviStolpec(col, odprt);
+            });
+
+            // Sklop je zaprt SAMO, ce je izrecno tako zapisan. Brez zapisa
+            // (ali s starim zapisom, ki sklopov ne pozna) sta oba odprta.
+            zaVsakSklop((c, k) => {
+                const zaprt = !!seznam && seznam.indexOf(ZAPRT_PREDPONA + k) !== -1;
+                nastaviStolpec(c, !zaprt);
             });
         }
 
@@ -1620,6 +1727,18 @@
         // Zaprt trak se odzove na klik po vsej širini, odprt samo na naslovu -
         // tako klik v vnosno polje stolpca ne zapre.
         document.addEventListener('click', function (e) {
+            // Najprej sklop: klik na naslov tabele zlozi ali razgrne celo tabelo.
+            // Naslov stoji ZUNAJ stolpcev, zato se klika ne moreta prekrivati.
+            const naslov = najdiStarsa(e.target, 'sklop-naslov');
+            if (naslov) {
+                const sklop = najdiStarsa(naslov, 'container');
+                if (sklop && kljucSklopa(sklop)) {
+                    nastaviStolpec(sklop, imaRazred(sklop, 'zaprt'));
+                    shraniPogled();
+                }
+                return;
+            }
+
             const col = najdiStarsa(e.target, 'col');
             if (!col || !kljucStolpca(col)) return;
             const jeZaprt = imaRazred(col, 'zaprt');
