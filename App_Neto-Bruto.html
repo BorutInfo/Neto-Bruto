@@ -270,15 +270,16 @@
         .calc-grid:not(.row-second) .col:not(.col-plain) > .col-header::after {
             color: #a35d09;
         }
+        /* Polna crta pod naslovom dobi vsak stolpec sklopa; zaprt trak je brez nje. */
+        .calc-grid:not(.row-second) .col:not(.col-plain):not(.zaprt) > .col-header {
+            border-bottom: 2px solid #a35d09;
+        }
         .calc-grid:not(.row-second) .col:first-child {
             background: #fdefd8;
             border-color: #dfc08a;
         }
         .calc-grid:not(.row-second) .col:first-child > .col-header {
             color: #8a4d05;
-        }
-        .calc-grid:not(.row-second) .col:first-child:not(.zaprt) > .col-header {
-            border-bottom: 2px solid #a35d09;
         }
 
         /* --- obdavcen sklop: hladna --- */
@@ -290,15 +291,15 @@
         .row-second .col:not(.col-plain) > .col-header::after {
             color: #0d6b60;
         }
+        .row-second .col:not(.col-plain):not(.zaprt) > .col-header {
+            border-bottom: 2px solid #0d6b60;
+        }
         .row-second .col:first-child {
             background: #ddf1ec;
             border-color: #9ccec4;
         }
         .row-second .col:first-child > .col-header {
             color: #0a5850;
-        }
-        .row-second .col:first-child:not(.zaprt) > .col-header {
-            border-bottom: 2px solid #0d6b60;
         }
 
         .result-box {
@@ -321,7 +322,8 @@
             letter-spacing: 0.5px;
             margin-bottom: 12px;
             padding-bottom: 6px;
-            border-bottom: 1px solid #c7d2fe;
+            /* ista moc kot crte pod naslovi stolpcev: 2px v barvi svojega sklopa */
+            border-bottom: 2px solid #4f46e5;
         }
         /* Vsaka vrstica Povzetka ima isto razdelitev, zato se stevilke same
            poravnajo druga pod drugo - tudi vrstica s sestevkom. */
@@ -372,7 +374,8 @@
         .result-sum {
             margin-top: 12px;
             padding-top: 10px;
-            border-top: 2px solid #c7d2fe;
+            /* za polovico sibkeje od zgornje crte: enaka barva, polovicna debelina */
+            border-top: 1px solid #4f46e5;
         }
         .result-sum .result-value { font-size: 24px; }   /* vrstica seštevka ostane večja, a gre skozi širino */
         .result-value.result-na {
