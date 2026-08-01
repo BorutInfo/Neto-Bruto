@@ -550,6 +550,25 @@
                 top: 0;
                 z-index: 20;
             }
+            /* ---------- Skok pod Povzetek (korak 1d, 1. 8. 2026) ----------
+               Napaka ni nasa: ko telefon zapre tipkovnico, sam potegne polje
+               nazaj na zaslon in ga postavi cisto na vrh. Ne ve, da je vrh
+               zaseden, zato ga prilepljen Povzetek prekrije.
+
+               Tu brskalniku povemo, koliko prostora naj nad poljem pusti.
+               Visine ne ugibamo - meri jo koda ob koncu datoteke in jo zapise
+               v --povzetek-h. Ce meritve ni (staro okolje, testi), ostane 0
+               in vedenje je enako kot prej.
+
+               Samo v sklopih, kjer Povzetek RES stoji. Prilepljeno polje se
+               drzi le znotraj svoje mreze, v .row-second pa je Povzetek skrit
+               (glej pravilo nize) - tam bi bil rezerviran prostor prazna luknja.
+
+               8 px zraka, da polje ni prilepljeno na Povzetek. */
+            .calc-grid:not(.row-second) input {
+                scroll-margin-top: calc(var(--povzetek-h, 0px) + 8px);
+            }
+
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
             .result-item { margin-bottom: 4px; }
@@ -1743,11 +1762,35 @@
             shraniPogled();
         });
 
+        // ---------- Skok pod Povzetek (korak 1d, 1. 8. 2026) ----------
+        // Slog zna prostor nad poljem rezervirati, a mora vedeti VISINO
+        // Povzetka. Ta ni stalna - spreminja se z vsebino (dolgi zneski,
+        // rdeci napis namesto stevilke, od koraka 3 vrstica na skupino).
+        // Stalna stevilka v kodi bi bila ugibanje, zato jo merimo.
+        //
+        // Visino zapisemo na .calc-grid, ne na stran: vsak sklop ima svoj
+        // Povzetek in svojo visino, polja pa jo podedujejo od svoje mreze.
+        //
+        // VAROVALO: testno okolje strani ne rise in ResizeObserver-ja ne
+        // pozna. Brez tega pogoja bi se aplikacija ob zagonu testov ustavila.
+        function meriPovzetke() {
+            if (typeof ResizeObserver !== 'function') return;
+            const opazovalec = new ResizeObserver(zapisi => {
+                zapisi.forEach(z => {
+                    const mreza = z.target.parentElement;
+                    if (mreza) mreza.style.setProperty('--povzetek-h', z.target.offsetHeight + 'px');
+                });
+            });
+            document.querySelectorAll('.calc-grid:not(.row-second) > .col-plain')
+                .forEach(p => opazovalec.observe(p));
+        }
+
         // Ob odprtju strani: zgradi vrstice (shranjene ali privzete) in izračunaj
         loadFromStorage();
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
+        meriPovzetke();
     </script>
 </body>
 </html>
