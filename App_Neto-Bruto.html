@@ -550,25 +550,6 @@
                 top: 0;
                 z-index: 20;
             }
-            /* ---------- Skok pod Povzetek (korak 1d, 1. 8. 2026) ----------
-               Napaka ni nasa: ko telefon zapre tipkovnico, sam potegne polje
-               nazaj na zaslon in ga postavi cisto na vrh. Ne ve, da je vrh
-               zaseden, zato ga prilepljen Povzetek prekrije.
-
-               Tu brskalniku povemo, koliko prostora naj nad poljem pusti.
-               Visine ne ugibamo - meri jo koda ob koncu datoteke in jo zapise
-               v --povzetek-h. Ce meritve ni (staro okolje, testi), ostane 0
-               in vedenje je enako kot prej.
-
-               Samo v sklopih, kjer Povzetek RES stoji. Prilepljeno polje se
-               drzi le znotraj svoje mreze, v .row-second pa je Povzetek skrit
-               (glej pravilo nize) - tam bi bil rezerviran prostor prazna luknja.
-
-               8 px zraka, da polje ni prilepljeno na Povzetek. */
-            .calc-grid:not(.row-second) input {
-                scroll-margin-top: calc(var(--povzetek-h, 0px) + 8px);
-            }
-
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
             .result-item { margin-bottom: 4px; }
@@ -1738,6 +1719,32 @@
             t.value = oblikovanoPolje(t.value);
         });
 
+        // ---------- Skok pod Povzetek na telefonu (korak 1d, 1. 8. 2026) ----------
+        // Ko telefon zapre tipkovnico, sam potegne polje na vrh zaslona. Ne ve,
+        // da je vrh zaseden, zato ga prilepljen Povzetek prekrije.
+        //
+        // Popravek: polje postavimo na SREDINO zaslona. Sredina je dalec od vrha,
+        // zato Povzetek ne pride v postev - ne glede na to, kako visok je. Prav
+        // njegova spremenljiva visina je bila vsa tezava tega koraka; tako izgine
+        // iz enacbe in ni ne merjenja ne stalne stevilke, ki bi bila ugibanje.
+        //
+        // Gibanja s tem ne dodajamo: telefon zaslon ob kljukici premakne ze danes.
+        // Dolocamo samo, kam naj pristane.
+        //
+        // Varovalo 1: ce ste s polja skocili na drugo polje, se ne zgodi nic.
+        // Tipkovnica ostane odprta in za novo polje brskalnik poskrbi sam.
+        // relatedTarget je element, ki je prevzel fokus; prazen pomeni "nihce".
+        //
+        // Varovalo 2: testno okolje strani ne rise in te zmoznosti ne pozna.
+        // Brez pogoja bi se aplikacija ob zagonu testov ustavila.
+        document.addEventListener('focusout', function (e) {
+            const t = e.target;
+            if (!t || t.type !== 'text') return;   // drsniki tipkovnice ne odprejo
+            if (e.relatedTarget) return;
+            if (typeof t.scrollIntoView !== 'function') return;
+            t.scrollIntoView({ block: 'center' });
+        });
+
         // Klik na naslov odpre ali zapre stolpec.
         // Zaprt trak se odzove na klik po vsej širini, odprt samo na naslovu -
         // tako klik v vnosno polje stolpca ne zapre.
@@ -1762,35 +1769,11 @@
             shraniPogled();
         });
 
-        // ---------- Skok pod Povzetek (korak 1d, 1. 8. 2026) ----------
-        // Slog zna prostor nad poljem rezervirati, a mora vedeti VISINO
-        // Povzetka. Ta ni stalna - spreminja se z vsebino (dolgi zneski,
-        // rdeci napis namesto stevilke, od koraka 3 vrstica na skupino).
-        // Stalna stevilka v kodi bi bila ugibanje, zato jo merimo.
-        //
-        // Visino zapisemo na .calc-grid, ne na stran: vsak sklop ima svoj
-        // Povzetek in svojo visino, polja pa jo podedujejo od svoje mreze.
-        //
-        // VAROVALO: testno okolje strani ne rise in ResizeObserver-ja ne
-        // pozna. Brez tega pogoja bi se aplikacija ob zagonu testov ustavila.
-        function meriPovzetke() {
-            if (typeof ResizeObserver !== 'function') return;
-            const opazovalec = new ResizeObserver(zapisi => {
-                zapisi.forEach(z => {
-                    const mreza = z.target.parentElement;
-                    if (mreza) mreza.style.setProperty('--povzetek-h', z.target.offsetHeight + 'px');
-                });
-            });
-            document.querySelectorAll('.calc-grid:not(.row-second) > .col-plain')
-                .forEach(p => opazovalec.observe(p));
-        }
-
         // Ob odprtju strani: zgradi vrstice (shranjene ali privzete) in izračunaj
         loadFromStorage();
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
-        meriPovzetke();
     </script>
 </body>
 </html>
