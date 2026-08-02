@@ -314,21 +314,28 @@
         .btn-remove { background-color: #e74c3c; }
         .btn-remove:hover { background-color: #c0392b; }
 
+        /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
+           ne ukine. Zato ga dobi vsak element posebej. Drsniki ostanejo pri 'auto',
+           da se vlecenje rocice ne spremeni. */
+        body * { touch-action: manipulation; }
+        input[type="range"] { touch-action: auto; }
+
         /* Gumba stolpca (ponastavi / razveljavi) stojita LEVO, v svojem bloku.
            Z napisom in zneski na desni nimata zveze: leva stran je nizja od desne
            (35+35 proti ~103 px), zato se ob pojavu razveljavitve ne premakne nic. */
-        .summary-block {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
+        /* Gumba sta IZVEN toka: sedita v praznem prostoru levo od zneskov.
+           Ce bi stala v vrsti, bi zneskom vzela 40 px sirine in najdaljsa
+           vrstica ("Od 649,96 €") se ne bi vec poravnala z zneskom nad njo.
+           Visine ne odmerjata: zneski so visoki ~103 px, gumba 74. */
+        .summary-block { position: relative; }
         .sb-gumbi {
+            position: absolute;
+            left: 0;
+            top: 5px;
             display: flex;
             flex-direction: column;
             gap: 4px;
-            flex-shrink: 0;
         }
-        .sb-zneski { flex: 1; min-width: 0; }
 
         /* V zlozenem traku gumbov ni: en dotik traku stolpec odpre in bi hkrati brisal. */
         .col.zaprt .sb-gumbi { display: none; }
@@ -349,6 +356,18 @@
         /* Barva obrobe prvega stolpca: vidna na obeh podlagah, ostane v druzini sklopa. */
         .btn-ponastavi { background-color: #dfc08a; }
         .row-second .btn-ponastavi { background-color: #9ccec4; }
+        /* Gumba za cel del (neobdavcen / obdavcen) stojita pod stolpci, levo,
+           eden ob drugem. Zasedeta celo sirino mreze, zato sta v svoji vrstici. */
+        .del-gumbi {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 4px;
+        }
+
+        /* Po ponastavitvi je kos pasiven: sicer bi drug dotik prepisal pomnik
+           s ze ponastavljenim stanjem in razveljavitev ne bi vrnila nicesar.
+           Siva je ista kot pri crtah. */
+        .btn-ponastavi.pasiven { background-color: #ccc; cursor: default; }
         .btn-razveljavi {
             background-color: #f39c12;
             font-size: 20px;
@@ -1667,7 +1686,9 @@
         // Za vsak stolpec hranimo zadnje stanje pred ponastavitvijo. Zapis zivi le,
         // dokler je stran odprta; osvezitev strani ga izbrise.
         const POMNIK = {};
+        const POMNIK_DELA = {};
         const VPRASANJE = 'Podatki v stolpcu bodo izbrisani.';
+        const VPRASANJE_DEL = 'Podatki v VSEH stolpcih bodo izbrisani.';
         const PRIVZETA_POT = ['0', '0', '0', '0'];
 
         function vrstaStolpca(kljuc) {
@@ -1711,11 +1732,77 @@
             return PRIVZETA_POT;
         }
 
+        // Razveljavitev je vidna natanko takrat, ko je kos pasiven - eno stanje, dva izraza.
+        // Mali kos je pasiven tudi, dokler je prizgana velika razveljavitev: takrat
+        // je cel del prazen in v stolpcu ni vec kaj brisati.
         function osveziRazveljavitev(col) {
             if (!col) return;
+            const jeShranjeno = !!POMNIK[kljucStolpca(col)];
+            const mreza = najdiStarsa(col, 'calc-grid');
+            const jeDel = !!(mreza && POMNIK_DELA[kljucDela(mreza)]);
             const gumb = col.querySelector('.btn-razveljavi');
-            if (!gumb || !gumb.style) return;
-            gumb.style.setProperty('display', POMNIK[kljucStolpca(col)] ? 'flex' : 'none');
+            if (gumb && gumb.style) gumb.style.setProperty('display', jeShranjeno ? 'flex' : 'none');
+            const kos = col.querySelector('.btn-ponastavi');
+            if (kos && kos.classList) {
+                if (jeShranjeno || jeDel) kos.classList.add('pasiven');
+                else kos.classList.remove('pasiven');
+            }
+        }
+
+        // ----- cel del (neobdavcen ali obdavcen) -----
+        function kljucDela(mreza) {
+            const el = mreza ? mreza.querySelector('.mini-result') : null;
+            const id = el ? el.getAttribute('id') : null;
+            const m = id ? String(id).match(/(\d+)$/) : null;
+            return m ? 'del-' + m[1] : null;
+        }
+
+        function zaVsakStolpec(mreza, fn) {
+            mreza.querySelectorAll('.col').forEach(col => {
+                const k = kljucStolpca(col);
+                const vrsta = vrstaStolpca(k);
+                if (vrsta) fn(col, k, vrsta, stevilkaStolpca(k));
+            });
+        }
+
+        function osveziDel(mreza) {
+            if (!mreza) return;
+            const jeShranjeno = !!POMNIK_DELA[kljucDela(mreza)];
+            const gumb = mreza.querySelector('.btn-del-razveljavi');
+            if (gumb && gumb.style) gumb.style.setProperty('display', jeShranjeno ? 'flex' : 'none');
+            const kos = mreza.querySelector('.btn-del-ponastavi');
+            if (kos && kos.classList) {
+                if (jeShranjeno) kos.classList.add('pasiven');
+                else kos.classList.remove('pasiven');
+            }
+            zaVsakStolpec(mreza, col => osveziRazveljavitev(col));
+        }
+
+        function ponastaviDel(mreza) {
+            const kljuc = kljucDela(mreza);
+            if (!kljuc || POMNIK_DELA[kljuc]) return;
+            if (typeof confirm === 'function' && confirm(VPRASANJE_DEL) !== true) return;
+            const posnetek = {};
+            zaVsakStolpec(mreza, (col, k, vrsta, n) => {
+                // Ce je bil stolpec ze ponastavljen, si zapomnimo stanje PRED tisto
+                // ponastavitvijo - sicer bi velika razveljavitev vrnila prazno.
+                posnetek[k] = POMNIK[k] || posnemiStolpec(vrsta, n);
+                delete POMNIK[k];
+                postaviStolpec(vrsta, n, privzetaVsebina(vrsta));
+            });
+            POMNIK_DELA[kljuc] = posnetek;
+            osveziDel(mreza);
+        }
+
+        function razveljaviDel(mreza) {
+            const kljuc = kljucDela(mreza);
+            const posnetek = POMNIK_DELA[kljuc];
+            if (!posnetek) return;
+            delete POMNIK_DELA[kljuc];
+            zaVsakStolpec(mreza, (col, k, vrsta, n) => {
+                if (posnetek[k]) postaviStolpec(vrsta, n, posnetek[k]);
+            });
+            osveziDel(mreza);
         }
 
         function ponastaviStolpec(col) {
@@ -1723,6 +1810,12 @@
             const vrsta = vrstaStolpca(kljuc);
             const n = stevilkaStolpca(kljuc);
             if (!vrsta || !n) return;
+            // Pasiven kos ne stori nicesar in ne vprasa. Pomnik hrani stanje pred
+            // PRVO ponastavitvijo in ga druga ne sme povoziti. Pasiven je tudi,
+            // dokler je prizgana velika razveljavitev - takrat je stolpec ze prazen.
+            if (POMNIK[kljuc]) return;
+            const mrezaStolpca = najdiStarsa(col, 'calc-grid');
+            if (mrezaStolpca && POMNIK_DELA[kljucDela(mrezaStolpca)]) return;
             // Ce okna z vprasanjem ni (testno okolje), se ponastavitev izvede.
             if (typeof confirm === 'function' && confirm(VPRASANJE) !== true) return;
             POMNIK[kljuc] = posnemiStolpec(vrsta, n);
@@ -1745,9 +1838,17 @@
             const col = najdiStarsa(el, 'col');
             if (!col) return;
             const kljuc = kljucStolpca(col);
-            if (!kljuc || !POMNIK[kljuc]) return;
-            delete POMNIK[kljuc];
-            osveziRazveljavitev(col);
+            if (kljuc && POMNIK[kljuc]) {
+                delete POMNIK[kljuc];
+                osveziRazveljavitev(col);
+            }
+            // Prvi vpis kamorkoli v del ugasne tudi veliko razveljavitev.
+            const mreza = najdiStarsa(col, 'calc-grid');
+            const kd = kljucDela(mreza);
+            if (kd && POMNIK_DELA[kd]) {
+                delete POMNIK_DELA[kd];
+                osveziDel(mreza);
+            }
         }
 
         // Gumba nista v HTML: postavi ju skript v vsak stolpec, ki ima seštevek.
@@ -1756,6 +1857,11 @@
             '<button type="button" class="btn-stolpec btn-ponastavi" title="Ponastavi stolpec" aria-label="Ponastavi stolpec">' +
             '<span class="kos" aria-hidden="true"><span class="kos-pokrov"></span><span class="kos-telo"></span></span></button>' +
             '<button type="button" class="btn-stolpec btn-razveljavi" title="Razveljavi ponastavitev" aria-label="Razveljavi ponastavitev">&#8634;</button>';
+
+        const GUMBA_DELA_HTML =
+            '<button type="button" class="btn-stolpec btn-ponastavi btn-del-ponastavi" title="Ponastavi vse stolpce" aria-label="Ponastavi vse stolpce">' +
+            '<span class="kos" aria-hidden="true"><span class="kos-pokrov"></span><span class="kos-telo"></span></span></button>' +
+            '<button type="button" class="btn-stolpec btn-razveljavi btn-del-razveljavi" title="Razveljavi ponastavitev vseh stolpcev" aria-label="Razveljavi ponastavitev vseh stolpcev">&#8634;</button>';
 
         function postaviGumbeStolpcev() {
             document.querySelectorAll('.col').forEach(col => {
@@ -1777,6 +1883,17 @@
                 blok.appendChild(gumbi);
                 blok.appendChild(zneski);
                 osveziRazveljavitev(col);
+            });
+
+            // Gumba za cel del. Vstavljena sta V mrezo kot zadnje polje cez vso
+            // sirino - tako sta na Macu pod stolpci, na telefonu pa na dnu sklada.
+            document.querySelectorAll('.calc-grid').forEach(mreza => {
+                if (!kljucDela(mreza) || mreza.querySelector('.del-gumbi')) return;
+                const blok = document.createElement('div');
+                blok.className = 'del-gumbi';
+                blok.innerHTML = GUMBA_DELA_HTML;
+                mreza.appendChild(blok);
+                osveziDel(mreza);
             });
         }
 
@@ -1971,6 +2088,13 @@
 
             // Dodajanje ali brisanje vrstice je sprememba: razveljavitev ugasne.
             if (imaRazred(e.target, 'btn-action')) { pozabiRazveljavitev(e.target); return; }
+
+            // Gumba celega dela morata biti pred stolpcnima: nosita oba razreda.
+            const kosDela = najdiStarsa(e.target, 'btn-del-ponastavi');
+            if (kosDela) { ponastaviDel(najdiStarsa(kosDela, 'calc-grid')); return; }
+
+            const razvDela = najdiStarsa(e.target, 'btn-del-razveljavi');
+            if (razvDela) { razveljaviDel(najdiStarsa(razvDela, 'calc-grid')); return; }
 
             // Gumba stolpca. najdiStarsa zajame tudi dotik narisanega kosa.
             const ponastavi = najdiStarsa(e.target, 'btn-ponastavi');
