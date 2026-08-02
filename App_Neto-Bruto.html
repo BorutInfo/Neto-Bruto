@@ -11,6 +11,9 @@
             color: #333;
             padding: 20px;
             margin: 0;
+            /* Ukine dvojni dotik za povecavo (podvojen dotik gumba je s tem takojsen).
+               Scipanje z dvema prstoma OSTANE - potrebuje ga korak 11. */
+            touch-action: manipulation;
         }
         .container {
             max-width: 1200px;
@@ -310,6 +313,73 @@
         .btn-add:hover { background-color: #27ae60; }
         .btn-remove { background-color: #e74c3c; }
         .btn-remove:hover { background-color: #c0392b; }
+
+        /* Gumba stolpca (ponastavi / razveljavi) stojita LEVO, v svojem bloku.
+           Z napisom in zneski na desni nimata zveze: leva stran je nizja od desne
+           (35+35 proti ~103 px), zato se ob pojavu razveljavitve ne premakne nic. */
+        .summary-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .sb-gumbi {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .sb-zneski { flex: 1; min-width: 0; }
+
+        /* V zlozenem traku gumbov ni: en dotik traku stolpec odpre in bi hkrati brisal. */
+        .col.zaprt .sb-gumbi { display: none; }
+
+        .btn-stolpec {
+            width: 32px;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        /* Barva obrobe prvega stolpca: vidna na obeh podlagah, ostane v druzini sklopa. */
+        .btn-ponastavi { background-color: #dfc08a; }
+        .row-second .btn-ponastavi { background-color: #9ccec4; }
+        .btn-razveljavi {
+            background-color: #f39c12;
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        /* Kos za smeti je narisan iz dveh pravokotnikov, ne iz slicice (emoji):
+           slicico Apple vedno izrise barvno in je na obarvanem gumbu ni mogoce pobeliti. */
+        .kos { position: relative; display: block; width: 14px; height: 18px; }
+        .kos-pokrov {
+            position: absolute; top: 3px; left: 0;
+            width: 14px; height: 2px;
+            background: #fff; border-radius: 1px;
+        }
+        .kos-pokrov::after {
+            content: '';
+            position: absolute; top: -3px; left: 4px;
+            width: 6px; height: 2px;
+            background: #fff; border-radius: 1px;
+        }
+        .kos-telo {
+            position: absolute; top: 7px; left: 2px;
+            width: 10px; height: 11px;
+            background: #fff; border-radius: 0 0 2px 2px;
+        }
+
+        /* Pripravljeno polje: prvi dotik ga obarva, prva tipka povozi vso vsebino.
+           Pravega oznacevanja namenoma ne uporabljamo - iPhone ob njem prikaze
+           svoj oblacek "Kopiraj / Prilepi", ki pokrije vrstico nad poljem. */
+        input.pripravljeno { background-color: #fff6cc; }
 
         /* Poravnava zneskov na dnu stolpcev.
            Pisava z enako širokimi znaki + desna poravnava poskrbita, da so pike nad
@@ -1561,6 +1631,155 @@
             else col.classList.add('zaprt');
         }
 
+        // ---------- Pripravljeno polje ----------
+        // Prvi dotik polja ga obarva: prva tipka povozi vso vsebino, kot bi bila
+        // oznacena. Pravega oznacevanja ne uporabljamo, ker iPhone ob njem prikaze
+        // oblacek "Kopiraj / Prilepi". Drugi dotik pripravljenost umakne in polje
+        // se ureja po starem. Nikjer ni ure - testno okolje je ne pozna.
+        const RAZRED_PRIPRAVLJENO = 'pripravljeno';
+        let vrednostObVstopu = '';   // vsebina polja v trenutku, ko je dobilo fokus
+        let pravkarFokusirano = null; // polje, ki je fokus dobilo s tem istim dotikom
+
+        function jeVnosnoPolje(el) {
+            if (!el || !el.className) return false;
+            const c = String(el.className);
+            return c.indexOf('name-field') !== -1 || c.indexOf('num-field') !== -1;
+        }
+
+        function odpraviPripravljenost(el) {
+            if (el && el.classList) el.classList.remove(RAZRED_PRIPRAVLJENO);
+        }
+
+        // Brskalnik je vtipkani znak ze vstavil v staro besedilo. Izluscimo ga iz
+        // razlike med starim in novim zapisom in v polju pustimo samo njega.
+        // Ce se je besedilo skrajsalo (vrac'alka), je izid prazno polje - enako,
+        // kot bi vrac'alka pobrisala oznaceno vsebino.
+        function povoziPripravljeno(t) {
+            const staro = String(vrednostObVstopu);
+            const novo = String(t.value);
+            const dodano = novo.length - staro.length;
+            if (dodano <= 0) { t.value = ''; return; }
+            const konec = (typeof t.selectionStart === 'number') ? t.selectionStart : novo.length;
+            t.value = novo.substring(konec - dodano, konec);
+        }
+
+        // ---------- Ponastavitev stolpca in razveljavitev ----------
+        // Za vsak stolpec hranimo zadnje stanje pred ponastavitvijo. Zapis zivi le,
+        // dokler je stran odprta; osvezitev strani ga izbrise.
+        const POMNIK = {};
+        const VPRASANJE = 'Podatki v stolpcu bodo izbrisani.';
+        const PRIVZETA_POT = ['0', '0', '0', '0'];
+
+        function vrstaStolpca(kljuc) {
+            if (!kljuc) return null;
+            if (kljuc.indexOf('sum-base-') === 0) return 'base';
+            if (kljuc.indexOf('sum-tax-') === 0) return 'tax';
+            if (kljuc.indexOf('sum-costs-') === 0) return 'costs';
+            if (kljuc.indexOf('sum-travel-') === 0) return 'travel';
+            return null;
+        }
+
+        function stevilkaStolpca(kljuc) {
+            const m = String(kljuc).match(/(\d+)$/);
+            return m ? m[1] : null;
+        }
+
+        function posnemiStolpec(vrsta, n) {
+            if (vrsta === 'base') return collectRows('#base-container-' + n + ' .cost-row', 'base-val-' + n);
+            if (vrsta === 'costs') return collectRows('#costs-container-' + n + ' .cost-row', 'cost-val-' + n);
+            if (vrsta === 'tax') return collectRows('#taxes-container-' + n + ' .cost-row', 'tax-val-' + n);
+            return TRAVEL_FIELDS.map(f => rawVal(f + n));
+        }
+
+        // Postavi vsebino stolpca in poskrbi za vse, kar je od nje odvisno.
+        // Pri davkih drsnik postavi appendTaxEntry sam: ob vrednosti 0 se obseg
+        // skrci nazaj na privzetih 30 %.
+        function postaviStolpec(vrsta, n, vsebina) {
+            if (vrsta === 'base') rebuildBases('base-container-' + n, n, vsebina);
+            else if (vrsta === 'costs') rebuildCosts('costs-container-' + n, n, vsebina);
+            else if (vrsta === 'tax') rebuildTaxes('taxes-container-' + n, n, vsebina);
+            else TRAVEL_FIELDS.forEach((f, i) => setVal(f + n, vsebina[i]));
+            oblikujVsaPolja();
+            calculateAll();
+            saveToStorage();
+        }
+
+        function privzetaVsebina(vrsta) {
+            if (vrsta === 'base') return DEFAULT_BASES;
+            if (vrsta === 'costs') return DEFAULT_COSTS;
+            if (vrsta === 'tax') return DEFAULT_TAXES;
+            return PRIVZETA_POT;
+        }
+
+        function osveziRazveljavitev(col) {
+            if (!col) return;
+            const gumb = col.querySelector('.btn-razveljavi');
+            if (!gumb || !gumb.style) return;
+            gumb.style.setProperty('display', POMNIK[kljucStolpca(col)] ? 'flex' : 'none');
+        }
+
+        function ponastaviStolpec(col) {
+            const kljuc = kljucStolpca(col);
+            const vrsta = vrstaStolpca(kljuc);
+            const n = stevilkaStolpca(kljuc);
+            if (!vrsta || !n) return;
+            // Ce okna z vprasanjem ni (testno okolje), se ponastavitev izvede.
+            if (typeof confirm === 'function' && confirm(VPRASANJE) !== true) return;
+            POMNIK[kljuc] = posnemiStolpec(vrsta, n);
+            postaviStolpec(vrsta, n, privzetaVsebina(vrsta));
+            osveziRazveljavitev(col);
+        }
+
+        function razveljaviStolpec(col) {
+            const kljuc = kljucStolpca(col);
+            const vsebina = POMNIK[kljuc];
+            if (!vsebina) return;
+            delete POMNIK[kljuc];
+            postaviStolpec(vrstaStolpca(kljuc), stevilkaStolpca(kljuc), vsebina);
+            osveziRazveljavitev(col);
+        }
+
+        // Vsaka razveljavitev pripada svojemu stolpcu: sprememba v Stroskih
+        // pobrise razveljavitev pri Stroskih, tista pri Davkih ostane.
+        function pozabiRazveljavitev(el) {
+            const col = najdiStarsa(el, 'col');
+            if (!col) return;
+            const kljuc = kljucStolpca(col);
+            if (!kljuc || !POMNIK[kljuc]) return;
+            delete POMNIK[kljuc];
+            osveziRazveljavitev(col);
+        }
+
+        // Gumba nista v HTML: postavi ju skript v vsak stolpec, ki ima seštevek.
+        // Tako jih ni treba prepisovati stirinajstkrat in korak 2 jih dobi zastonj.
+        const GUMBA_HTML =
+            '<button type="button" class="btn-stolpec btn-ponastavi" title="Ponastavi stolpec" aria-label="Ponastavi stolpec">' +
+            '<span class="kos" aria-hidden="true"><span class="kos-pokrov"></span><span class="kos-telo"></span></span></button>' +
+            '<button type="button" class="btn-stolpec btn-razveljavi" title="Razveljavi ponastavitev" aria-label="Razveljavi ponastavitev">&#8634;</button>';
+
+        function postaviGumbeStolpcev() {
+            document.querySelectorAll('.col').forEach(col => {
+                const kljuc = kljucStolpca(col);
+                if (!vrstaStolpca(kljuc)) return;
+                const blok = col.querySelector('.summary-block');
+                if (!blok || blok.querySelector('.sb-gumbi')) return;
+
+                const zneski = document.createElement('div');
+                zneski.className = 'sb-zneski';
+                // slice: v brskalniku je children ziva zbirka brez forEach,
+                // poleg tega se med prelaganjem krajsa.
+                Array.prototype.slice.call(blok.children).forEach(o => zneski.appendChild(o));
+
+                const gumbi = document.createElement('div');
+                gumbi.className = 'sb-gumbi';
+                gumbi.innerHTML = GUMBA_HTML;
+
+                blok.appendChild(gumbi);
+                blok.appendChild(zneski);
+                osveziRazveljavitev(col);
+            });
+        }
+
         // ---------- Harmonika sklopa (cele tabele) ----------
         // Kljuc sklopa je oznaka njegovega skupnega zneska ("tot-total-1"), zato
         // tudi tu v HTML ni novih oznak.
@@ -1640,6 +1859,15 @@
         // ---------- Dogodki ----------
         document.addEventListener('input', function (e) {
             const t = e.target;
+
+            // Prva tipka v pripravljenem polju povozi vso vsebino.
+            if (imaRazred(t, RAZRED_PRIPRAVLJENO)) {
+                odpraviPripravljenost(t);
+                povoziPripravljeno(t);
+            }
+            // Vsak vpis je sprememba: razveljavitev v tem stolpcu ugasne.
+            pozabiRazveljavitev(t);
+
             // Med tipkanjem je besedilo surovo, zato je zdaj pravi trenutek,
             // da si zapomnimo strojno vrednost polja.
             if (jeStevilskoPolje(t)) {
@@ -1709,46 +1937,48 @@
         // focus/blur ne dvigata do dokumenta.
         document.addEventListener('focusin', function (e) {
             const t = e.target;
-            if (!jeStevilskoPolje(t)) return;
-            t.value = (String(t.value).trim() === '') ? '' : String(vrednostPolja(t));
+            if (jeStevilskoPolje(t)) {
+                t.value = (String(t.value).trim() === '') ? '' : String(vrednostPolja(t));
+            }
+            // Pripravljenost postavimo SELE za prepisom: sicer bi si zapomnili
+            // oblikovan zapis ("1.250,00") namesto tistega, ki je zdaj v polju.
+            if (jeVnosnoPolje(t)) {
+                vrednostObVstopu = String(t.value);
+                t.classList.add(RAZRED_PRIPRAVLJENO);
+                pravkarFokusirano = t;
+            }
         });
 
         document.addEventListener('focusout', function (e) {
             const t = e.target;
+            odpraviPripravljenost(t);
+            if (pravkarFokusirano === t) pravkarFokusirano = null;
             if (!jeStevilskoPolje(t)) return;
             t.value = oblikovanoPolje(t.value);
-        });
-
-        // ---------- Skok pod Povzetek na telefonu (korak 1d, 1. 8. 2026) ----------
-        // Ko telefon zapre tipkovnico, sam potegne polje na vrh zaslona. Ne ve,
-        // da je vrh zaseden, zato ga prilepljen Povzetek prekrije.
-        //
-        // Popravek: polje postavimo na SREDINO zaslona. Sredina je dalec od vrha,
-        // zato Povzetek ne pride v postev - ne glede na to, kako visok je. Prav
-        // njegova spremenljiva visina je bila vsa tezava tega koraka; tako izgine
-        // iz enacbe in ni ne merjenja ne stalne stevilke, ki bi bila ugibanje.
-        //
-        // Gibanja s tem ne dodajamo: telefon zaslon ob kljukici premakne ze danes.
-        // Dolocamo samo, kam naj pristane.
-        //
-        // Varovalo 1: ce ste s polja skocili na drugo polje, se ne zgodi nic.
-        // Tipkovnica ostane odprta in za novo polje brskalnik poskrbi sam.
-        // relatedTarget je element, ki je prevzel fokus; prazen pomeni "nihce".
-        //
-        // Varovalo 2: testno okolje strani ne rise in te zmoznosti ne pozna.
-        // Brez pogoja bi se aplikacija ob zagonu testov ustavila.
-        document.addEventListener('focusout', function (e) {
-            const t = e.target;
-            if (!t || t.type !== 'text') return;   // drsniki tipkovnice ne odprejo
-            if (e.relatedTarget) return;
-            if (typeof t.scrollIntoView !== 'function') return;
-            t.scrollIntoView({ block: 'center' });
         });
 
         // Klik na naslov odpre ali zapre stolpec.
         // Zaprt trak se odzove na klik po vsej širini, odprt samo na naslovu -
         // tako klik v vnosno polje stolpca ne zapre.
         document.addEventListener('click', function (e) {
+            // Dotik v vnosno polje: prvi ga je pravkar pripravil, drugi
+            // pripravljenost umakne. Klik v polje stolpca nikoli ne odpira.
+            if (jeVnosnoPolje(e.target)) {
+                if (pravkarFokusirano === e.target) pravkarFokusirano = null;
+                else odpraviPripravljenost(e.target);
+                return;
+            }
+
+            // Dodajanje ali brisanje vrstice je sprememba: razveljavitev ugasne.
+            if (imaRazred(e.target, 'btn-action')) { pozabiRazveljavitev(e.target); return; }
+
+            // Gumba stolpca. najdiStarsa zajame tudi dotik narisanega kosa.
+            const ponastavi = najdiStarsa(e.target, 'btn-ponastavi');
+            if (ponastavi) { ponastaviStolpec(najdiStarsa(ponastavi, 'col')); return; }
+
+            const razveljavi = najdiStarsa(e.target, 'btn-razveljavi');
+            if (razveljavi) { razveljaviStolpec(najdiStarsa(razveljavi, 'col')); return; }
+
             // Najprej sklop: klik na naslov tabele zlozi ali razgrne celo tabelo.
             // Naslov stoji ZUNAJ stolpcev, zato se klika ne moreta prekrivati.
             const naslov = najdiStarsa(e.target, 'sklop-naslov');
@@ -1771,6 +2001,7 @@
 
         // Ob odprtju strani: zgradi vrstice (shranjene ali privzete) in izračunaj
         loadFromStorage();
+        postaviGumbeStolpcev();
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
