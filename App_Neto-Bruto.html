@@ -54,18 +54,34 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
+        /* Kljukica je NARISANA, ne zapisana z znakom: kvadratek z dvema robovoma,
+           zavrten za 45 stopinj. Znak bi risala pisava, mi pa je ne nadzorujemo -
+           ⌃ in ⌄ na iPhonu nista prisla iz iste pisave in sta bila razlicno velika
+           (Borut, 4. 8. 2026). Ista past kot pri kosu za smeti, ki je zato narisan.
+
+           Velikost je v DELEZU pisave naslova, ne v pikah: 1.15em od 1.2em naslova
+           je 22 px, kolikor je merila prejsnja kljukica. Ko se pisava spremeni
+           (koraka 10 in 11), se kljukica spremeni z njo.
+           Barvo pobere iz besedila (currentColor), zato pravila za barve sklopov
+           delujejo naprej brez sprememb.
+           45deg = kljukica navzdol, -135deg = navzgor. */
         h2.sklop-naslov::after {
-            content: '⌃';
+            content: '';
             position: absolute;
             right: 0;
-            top: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
+            top: 50%;
+            font-size: 1.15em;
+            width: 0.4em;
+            height: 0.4em;
+            box-sizing: border-box;
+            border-right: 0.1em solid currentColor;
+            border-bottom: 0.1em solid currentColor;
+            transform: translateY(-50%) rotate(-135deg);
             color: #868e96;
-            font-size: 22px;
         }
-        .container.zaprt > h2.sklop-naslov::after { content: '⌄'; }
+        .container.zaprt > h2.sklop-naslov::after {
+            transform: translateY(-50%) rotate(45deg);
+        }
 
         /* Ime se pri ozkem zaslonu obreze, da znesek in puscica ostaneta na mestu */
         .sklop-ime {
@@ -138,27 +154,31 @@
 
         /* Puščica stoji ob desnem robu STOLPCA, ne ob naslovu, zato je pri
            zaprtem traku vedno skrajno desno - za zneskom. */
-        /* Kljukica je pri 20 px za nekaj pik sirsa od nekdanjega trikotnika,
-           zato stoji blize robu (11 namesto 15 px). Pas, ki ga zaseda, ostane
-           enako sirok in zneski v zlozenem traku se ne premaknejo. */
+        /* Narisana kljukica, enako kot pri naslovu sklopa. Velikost je delez
+           pisave naslova: 1.375em od 16 px je 22 px.
+           Stoji 11 px od roba - pas, ki ga zaseda, je enak kot pri prejsnjem
+           trikotniku in zneski v zlozenem traku se ne premaknejo.
+           Sidro je STOLPEC, ne naslov, zato je v zlozenem traku skrajno desno,
+           za zneskom. Zato je sredina naslova povedana s stevilko: 15 px zgornjega
+           roba stolpca + polovica 44 px visokega naslova. */
         .col-header::after {
-            content: '⌃';
+            content: '';
             position: absolute;
             right: 11px;
-            top: 15px;
-            height: 44px;
-            display: flex;
-            align-items: center;
+            top: 37px;
+            font-size: 1.375em;
+            width: 0.4em;
+            height: 0.4em;
+            box-sizing: border-box;
+            border-right: 0.1em solid currentColor;
+            border-bottom: 0.1em solid currentColor;
+            transform: translateY(-50%) rotate(-135deg);
             color: #868e96;
-            font-size: 22px;
         }
-        /* Zaprt stolpec spremeni samo NAVPICNO postavitev kljukice, ne velikosti:
-           font-size ostane isti kot pri odprtem. */
+        /* Zaprt stolpec spremeni samo smer in navpicno lego, ne velikosti. */
         .col.zaprt > .col-header::after {
-            content: '⌄';
-            top: 0;
-            bottom: 0;
-            height: auto;
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
         }
 
         /* Zaprt stolpec: naslov levo, njegov skupni znesek desno, puščica skrajno desno.
@@ -680,10 +700,12 @@
                 line-height: 1.4;
             }
             /* Puscica se poravna z naslovom, ne s sredino celotnega traku */
+            /* Na telefonu sta v zlozenem traku naslov in znesek eden pod drugim;
+               kljukica ostane pri naslovu. 18 px = 4 px + polovica 28 px visokega
+               naslova, torej natanko tam, kjer je stala prej. */
             .col.zaprt > .col-header::after {
-                top: 4px;
+                top: 18px;
                 bottom: auto;
-                height: 28px;
             }
 
             /* Podvojeno polje z zneski v drugi vrstici na telefonu ni potrebno */
