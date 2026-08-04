@@ -63,7 +63,7 @@
             display: flex;
             align-items: center;
             color: #868e96;
-            font-size: 20px;
+            font-size: 22px;
         }
         .container.zaprt > h2.sklop-naslov::after { content: '⌄'; }
 
@@ -150,8 +150,10 @@
             display: flex;
             align-items: center;
             color: #868e96;
-            font-size: 20px;
+            font-size: 22px;
         }
+        /* Zaprt stolpec spremeni samo NAVPICNO postavitev kljukice, ne velikosti:
+           font-size ostane isti kot pri odprtem. */
         .col.zaprt > .col-header::after {
             content: '⌄';
             top: 0;
@@ -300,15 +302,21 @@
 
         /* Vrstice so se dotikale: gumb "-" zgornje vrstice je stal tik nad gumbom
            "+" spodnje in zadnjo vrstico je bilo lahko izbrisati po nesreci.
-           Nad zadnjo vrstico je zato 8 px, med ostalimi 4 px.
+           Nad zadnjo vrstico je zato 10 px, med ostalimi 4 px.
            Velja samo za Honorarje in Stroske - v Davkih je med vrsticami ze drsnik.
            Pri eni sami vrstici se ne sprozi: nima predhodnice. */
         .vrstice .cost-row + .cost-row { margin-top: 4px; }
-        .vrstice .cost-row + .cost-row:last-child { margin-top: 8px; }
+        .vrstice .cost-row + .cost-row:last-child { margin-top: 10px; }
 
+        /* Gumb je enako visok kot vnosno polje ob njem: visine ne dolocamo, ampak
+           jo prevzame od vrstice (align-self: stretch). Stalnih 35 px je pomenilo,
+           da se je ob veliki pisavi polje raztegnilo, gumb pa ne - spodnja robova
+           se nista vec ujemala. Spodnja meja ostane 35 px, da gumb nikoli ni manjsi
+           od dosedanjega. */
         .btn-action {
             width: 32px;
-            height: 35px;
+            align-self: stretch;
+            min-height: 35px;
             border: none;
             border-radius: 4px;
             font-size: 1.2em;
