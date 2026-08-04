@@ -55,7 +55,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         h2.sklop-naslov::after {
-            content: '▾';
+            content: '⌃';
             position: absolute;
             right: 0;
             top: 0;
@@ -63,9 +63,9 @@
             display: flex;
             align-items: center;
             color: #868e96;
-            font-size: 16px;
+            font-size: 20px;
         }
-        .container.zaprt > h2.sklop-naslov::after { content: '▸'; }
+        .container.zaprt > h2.sklop-naslov::after { content: '⌄'; }
 
         /* Ime se pri ozkem zaslonu obreze, da znesek in puscica ostaneta na mestu */
         .sklop-ime {
@@ -138,19 +138,22 @@
 
         /* Puščica stoji ob desnem robu STOLPCA, ne ob naslovu, zato je pri
            zaprtem traku vedno skrajno desno - za zneskom. */
+        /* Kljukica je pri 20 px za nekaj pik sirsa od nekdanjega trikotnika,
+           zato stoji blize robu (11 namesto 15 px). Pas, ki ga zaseda, ostane
+           enako sirok in zneski v zlozenem traku se ne premaknejo. */
         .col-header::after {
-            content: '▾';
+            content: '⌃';
             position: absolute;
-            right: 15px;
+            right: 11px;
             top: 15px;
             height: 44px;
             display: flex;
             align-items: center;
             color: #868e96;
-            font-size: 16px;
+            font-size: 20px;
         }
         .col.zaprt > .col-header::after {
-            content: '▸';
+            content: '⌄';
             top: 0;
             bottom: 0;
             height: auto;
@@ -295,6 +298,14 @@
             padding-right: 8px; /* Zamik številke od roba */
         }
 
+        /* Vrstice so se dotikale: gumb "-" zgornje vrstice je stal tik nad gumbom
+           "+" spodnje in zadnjo vrstico je bilo lahko izbrisati po nesreci.
+           Nad zadnjo vrstico je zato 8 px, med ostalimi 4 px.
+           Velja samo za Honorarje in Stroske - v Davkih je med vrsticami ze drsnik.
+           Pri eni sami vrstici se ne sprozi: nima predhodnice. */
+        .vrstice .cost-row + .cost-row { margin-top: 4px; }
+        .vrstice .cost-row + .cost-row:last-child { margin-top: 8px; }
+
         .btn-action {
             width: 32px;
             height: 35px;
@@ -356,12 +367,17 @@
         /* Barva obrobe prvega stolpca: vidna na obeh podlagah, ostane v druzini sklopa. */
         .btn-ponastavi { background-color: #dfc08a; }
         .row-second .btn-ponastavi { background-color: #9ccec4; }
-        /* Gumba za cel del (neobdavcen / obdavcen) stojita pod stolpci, levo,
-           eden ob drugem. Zasedeta celo sirino mreze, zato sta v svoji vrstici. */
+        /* Gumba za cel del (neobdavcen / obdavcen) stojita pod stolpcem 4, v isti
+           navpicnici kot kos tega stolpca. Mesto v mrezi je stalno: odpiranje in
+           zapiranje stolpcev spremeni njihovo visino, ne sirine. Zamik 15 px je
+           notranji rob stolpca - natanko toliko je od roba oddaljen kos v njem.
+           Stolpec 4 (potni stroski) stoji na cetrtem mestu v OBEH vrstah: v
+           obdavcenem delu mesto stolpca Davki drzi prazno polje .col-empty. */
         .del-gumbi {
-            grid-column: 1 / -1;
+            grid-column: 4;
             display: flex;
             gap: 4px;
+            padding-left: 15px;
         }
 
         /* Po ponastavitvi je kos pasiven: sicer bi drug dotik prepisal pomnik
@@ -609,6 +625,10 @@
             .col { padding: 10px 12px; }
             .col-plain { padding: 0; }   /* sicer bi bil Povzetek za 24 px ozji od ostalih */
 
+            /* Na telefonu je mreza en sam stolpec - cetrtega mesta ni. Zamik je
+               manjsi, ker ima stolpec na telefonu ozji notranji rob (12 px). */
+            .del-gumbi { grid-column: 1; padding-left: 12px; }
+
             /* Naslov harmonike in znesek eden POD drugim, ne eden ob drugem.
                Tako si ne delita sirine in se ne moreta prekrivati. */
             .col.zaprt {
@@ -675,7 +695,7 @@
         <div class="calc-grid">
             <div class="col">
                 <div class="col-header">1. Neobdavčen Neto</div>
-                <div id="base-container-1"></div>
+                <div id="base-container-1" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-1">0,00 €</div>
@@ -697,7 +717,7 @@
 
             <div class="col">
                 <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-1"></div>
+                <div id="costs-container-1" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj stroški</div>
                     <div class="mini-result" id="sum-costs-1">0,00 €</div>
@@ -756,7 +776,7 @@
         <div class="calc-grid row-second">
             <div class="col">
                 <div class="col-header">1. Obdavčen Neto</div>
-                <div id="base-container-3"></div>
+                <div id="base-container-3" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-3">0,00 €</div>
@@ -769,7 +789,7 @@
 
             <div class="col">
                 <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-3"></div>
+                <div id="costs-container-3" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj stroški</div>
                     <div class="mini-result" id="sum-costs-3">0,00 €</div>
@@ -835,7 +855,7 @@
         <div class="calc-grid">
             <div class="col">
                 <div class="col-header">1. Neobdavčen Bruto</div>
-                <div id="base-container-2"></div>
+                <div id="base-container-2" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-2">0,00 €</div>
@@ -857,7 +877,7 @@
 
             <div class="col">
                 <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-2"></div>
+                <div id="costs-container-2" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj stroški</div>
                     <div class="mini-result" id="sum-costs-2">0,00 €</div>
@@ -916,7 +936,7 @@
         <div class="calc-grid row-second">
             <div class="col">
                 <div class="col-header">1. Obdavčen Bruto</div>
-                <div id="base-container-4"></div>
+                <div id="base-container-4" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj osnova</div>
                     <div class="mini-result" id="sum-base-4">0,00 €</div>
@@ -929,7 +949,7 @@
 
             <div class="col">
                 <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-4"></div>
+                <div id="costs-container-4" class="vrstice"></div>
                 <div class="summary-block">
                     <div class="sum-label">Skupaj stroški</div>
                     <div class="mini-result" id="sum-costs-4">0,00 €</div>
@@ -1251,6 +1271,9 @@
                 const btn = row.querySelector('button');
                 if (btn) setRowButton(btn, i === rows.length - 1, kind, containerId);
             });
+            // Dodana ali odstranjena vrstica je sprememba stolpca: kos se odloci znova.
+            // Ob nalaganju strani gumbov se ni - osvezitev takrat ne stori nicesar.
+            osveziKose(document.getElementById(containerId));
         }
 
         // ---------- Osnova (honorarji) ----------
@@ -1732,21 +1755,75 @@
             return PRIVZETA_POT;
         }
 
-        // Razveljavitev je vidna natanko takrat, ko je kos pasiven - eno stanje, dva izraza.
-        // Mali kos je pasiven tudi, dokler je prizgana velika razveljavitev: takrat
-        // je cel del prazen in v stolpcu ni vec kaj brisati.
+        // Prazno polje in nicla sta ista stvar: v polju lahko pise 0 ali pa je
+        // prazno, stolpec je v obeh primerih prazen.
+        function steviloAli0(v) {
+            const n = parseNum(v);
+            return isFinite(n) ? n : 0;
+        }
+
+        function enakaVsebina(a, b) {
+            if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                const x = a[i], y = b[i];
+                if (x && typeof x === 'object') {
+                    if (!y || typeof y !== 'object') return false;
+                    if (String(x.name) !== String(y.name)) return false;
+                    if (steviloAli0(x.val) !== steviloAli0(y.val)) return false;
+                } else if (steviloAli0(x) !== steviloAli0(y)) return false;
+            }
+            return true;
+        }
+
+        // Stolpec je v zacetnem stanju, kadar izgleda natanko tako, kot bi po
+        // ponastavitvi. Vprasanje ni "so zneski nic", ampak "bi ponastavitev sploh
+        // kaj spremenila" - zato bo pravilo veljalo tudi takrat, ko bo stolpec 4
+        // svoje zacetne zneske dobival iz Nastavitev (koraka 7 in 8).
+        function jeZacetno(col) {
+            if (!col) return true;
+            const kljuc = kljucStolpca(col);
+            const vrsta = vrstaStolpca(kljuc);
+            const n = stevilkaStolpca(kljuc);
+            if (!vrsta || !n) return true;
+            return enakaVsebina(posnemiStolpec(vrsta, n), privzetaVsebina(vrsta));
+        }
+
+        function jeDelZacetni(mreza) {
+            let vse = true;
+            if (mreza) zaVsakStolpec(mreza, col => { if (!jeZacetno(col)) vse = false; });
+            return vse;
+        }
+
+        // Vidnost razveljavitve je svoje stanje: ugasne ze ob prvi tipki, sicer bi
+        // cez svez vpis vrnila stare podatke.
+        function osveziGumbRazveljavi(col) {
+            const gumb = col ? col.querySelector('.btn-razveljavi') : null;
+            if (gumb && gumb.style) {
+                gumb.style.setProperty('display', POMNIK[kljucStolpca(col)] ? 'flex' : 'none');
+            }
+        }
+
+        // Kos je siv natanko takrat, kadar v stolpcu ni kaj brisati. Sivina po
+        // ponastavitvi in sivina, dokler gori velika razveljavitev, sta s tem
+        // POSLEDICI istega pravila in ne vec izjemi v kodi.
         function osveziRazveljavitev(col) {
             if (!col) return;
-            const jeShranjeno = !!POMNIK[kljucStolpca(col)];
-            const mreza = najdiStarsa(col, 'calc-grid');
-            const jeDel = !!(mreza && POMNIK_DELA[kljucDela(mreza)]);
-            const gumb = col.querySelector('.btn-razveljavi');
-            if (gumb && gumb.style) gumb.style.setProperty('display', jeShranjeno ? 'flex' : 'none');
+            osveziGumbRazveljavi(col);
             const kos = col.querySelector('.btn-ponastavi');
             if (kos && kos.classList) {
-                if (jeShranjeno || jeDel) kos.classList.add('pasiven');
+                if (jeZacetno(col)) kos.classList.add('pasiven');
                 else kos.classList.remove('pasiven');
             }
+        }
+
+        // Trenutek presoje: ko polje zapustite in ko dodate ali odstranite vrstico.
+        // Med tipkanjem se namenoma ne zgodi nic - kos med popravljanjem zneska ne
+        // sme utripati. Osvezimo cel del, ker se z enim stolpcem lahko spremeni
+        // tudi veliki kos.
+        function osveziKose(el) {
+            const col = najdiStarsa(el, 'col');
+            if (!col) return;
+            osveziDel(najdiStarsa(col, 'calc-grid'));
         }
 
         // ----- cel del (neobdavcen ali obdavcen) -----
@@ -1765,14 +1842,21 @@
             });
         }
 
+        function osveziGumbRazveljaviDel(mreza) {
+            const gumb = mreza ? mreza.querySelector('.btn-del-razveljavi') : null;
+            if (gumb && gumb.style) {
+                gumb.style.setProperty('display', POMNIK_DELA[kljucDela(mreza)] ? 'flex' : 'none');
+            }
+        }
+
+        // Veliki kos ima isto pravilo kot mali: siv je, dokler so vsi stolpci
+        // njegovega dela v zacetnem stanju.
         function osveziDel(mreza) {
             if (!mreza) return;
-            const jeShranjeno = !!POMNIK_DELA[kljucDela(mreza)];
-            const gumb = mreza.querySelector('.btn-del-razveljavi');
-            if (gumb && gumb.style) gumb.style.setProperty('display', jeShranjeno ? 'flex' : 'none');
+            osveziGumbRazveljaviDel(mreza);
             const kos = mreza.querySelector('.btn-del-ponastavi');
             if (kos && kos.classList) {
-                if (jeShranjeno) kos.classList.add('pasiven');
+                if (jeDelZacetni(mreza)) kos.classList.add('pasiven');
                 else kos.classList.remove('pasiven');
             }
             zaVsakStolpec(mreza, col => osveziRazveljavitev(col));
@@ -1781,6 +1865,8 @@
         function ponastaviDel(mreza) {
             const kljuc = kljucDela(mreza);
             if (!kljuc || POMNIK_DELA[kljuc]) return;
+            // Pasiven kos ne vprasa in ne shrani praznega stanja v pomnik.
+            if (jeDelZacetni(mreza)) return;
             if (typeof confirm === 'function' && confirm(VPRASANJE_DEL) !== true) return;
             const posnetek = {};
             zaVsakStolpec(mreza, (col, k, vrsta, n) => {
@@ -1810,12 +1896,12 @@
             const vrsta = vrstaStolpca(kljuc);
             const n = stevilkaStolpca(kljuc);
             if (!vrsta || !n) return;
-            // Pasiven kos ne stori nicesar in ne vprasa. Pomnik hrani stanje pred
-            // PRVO ponastavitvijo in ga druga ne sme povoziti. Pasiven je tudi,
-            // dokler je prizgana velika razveljavitev - takrat je stolpec ze prazen.
+            // Pasiven kos ne stori nicesar in ne vprasa: v stolpcu ni kaj brisati.
+            // Stanje po ponastavitvi in stanje pod prizgano veliko razveljavitvijo
+            // sta zajeta s tem istim pravilom - stolpec je takrat prazen.
+            if (jeZacetno(col)) return;
+            // Pomnik hrani stanje pred PRVO ponastavitvijo in ga druga ne sme povoziti.
             if (POMNIK[kljuc]) return;
-            const mrezaStolpca = najdiStarsa(col, 'calc-grid');
-            if (mrezaStolpca && POMNIK_DELA[kljucDela(mrezaStolpca)]) return;
             // Ce okna z vprasanjem ni (testno okolje), se ponastavitev izvede.
             if (typeof confirm === 'function' && confirm(VPRASANJE) !== true) return;
             POMNIK[kljuc] = posnemiStolpec(vrsta, n);
@@ -1840,14 +1926,14 @@
             const kljuc = kljucStolpca(col);
             if (kljuc && POMNIK[kljuc]) {
                 delete POMNIK[kljuc];
-                osveziRazveljavitev(col);
+                osveziGumbRazveljavi(col);
             }
             // Prvi vpis kamorkoli v del ugasne tudi veliko razveljavitev.
             const mreza = najdiStarsa(col, 'calc-grid');
             const kd = kljucDela(mreza);
             if (kd && POMNIK_DELA[kd]) {
                 delete POMNIK_DELA[kd];
-                osveziDel(mreza);
+                osveziGumbRazveljaviDel(mreza);
             }
         }
 
@@ -2070,8 +2156,9 @@
             const t = e.target;
             odpraviPripravljenost(t);
             if (pravkarFokusirano === t) pravkarFokusirano = null;
-            if (!jeStevilskoPolje(t)) return;
-            t.value = oblikovanoPolje(t.value);
+            if (jeStevilskoPolje(t)) t.value = oblikovanoPolje(t.value);
+            // Zapustitev polja je trenutek, ko se kos odloci, ali je se kaj brisati.
+            osveziKose(t);
         });
 
         // Klik na naslov odpre ali zapre stolpec.
