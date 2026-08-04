@@ -140,11 +140,20 @@
             text-align: left;
             margin-bottom: 5px;
             border-bottom: 1px solid #ccc;   /* enako kot obroba vnosnih polj; danes nevidno, prekrije ga 2px barvna crta */
+            padding-top: 4px;      /* enak zamik kot v zaprtem traku */
             padding-bottom: 5px;
             padding-right: 24px;   /* prostor za puščico */
-            min-height: 44px;
+            /* 28 px + 4 px zgoraj + 5 px spodaj = 37 px povrsine za dotik.
+               Prej je bilo 44 px samega prostora za besedilo, a je crta pod
+               naslovom takrat visela 30 px pod njim - naslov je namrec 4. 8. 2026
+               odsel na vrh. Borut je izbral tesnejso crto (moznost B). */
+            min-height: 28px;
             display: flex;
-            align-items: center;
+            /* Naslov stoji na VRHU svojega prostora, ne na sredini. Prej je bil
+               sredinjen v 44 px in je ob odpiranju stolpca poskocil navzdol -
+               v zaprtem traku je namrec pri vrhu. Visina 44 px ostane zaradi
+               zanesljivega dotika s prstom; spremeni se le lega besedila. */
+            align-items: flex-start;
             cursor: pointer;
             -webkit-user-select: none;
             user-select: none;
@@ -160,12 +169,14 @@
            trikotniku in zneski v zlozenem traku se ne premaknejo.
            Sidro je STOLPEC, ne naslov, zato je v zlozenem traku skrajno desno,
            za zneskom. Zato je sredina naslova povedana s stevilko: 15 px zgornjega
-           roba stolpca + polovica 44 px visokega naslova. */
+           roba stolpca + 4 px zamika naslova + polovica vrstice. Ker naslov odslej
+           stoji na istem mestu v obeh stanjih, velja ista stevilka za odprt in
+           zaprt stolpec - zaprti spremeni samo smer. */
         .col-header::after {
             content: '';
             position: absolute;
             right: 11px;
-            top: 37px;
+            top: 28px;
             font-size: 1.375em;
             width: 0.4em;
             height: 0.4em;
@@ -175,9 +186,8 @@
             transform: translateY(-50%) rotate(-135deg);
             color: #868e96;
         }
-        /* Zaprt stolpec spremeni samo smer in navpicno lego, ne velikosti. */
+        /* Zaprt stolpec spremeni samo smer, ne velikosti in ne lege. */
         .col.zaprt > .col-header::after {
-            top: 50%;
             transform: translateY(-50%) rotate(45deg);
         }
 
@@ -700,13 +710,9 @@
                 line-height: 1.4;
             }
             /* Puscica se poravna z naslovom, ne s sredino celotnega traku */
-            /* Na telefonu sta v zlozenem traku naslov in znesek eden pod drugim;
-               kljukica ostane pri naslovu. 18 px = 4 px + polovica 28 px visokega
-               naslova, torej natanko tam, kjer je stala prej. */
-            .col.zaprt > .col-header::after {
-                top: 18px;
-                bottom: auto;
-            }
+            /* Kljukica stoji pri naslovu v obeh stanjih. 23 px = 10 px roba
+               stolpca + 4 px zamika naslova + polovica vrstice. */
+            .col-header::after { top: 23px; }
 
             /* Podvojeno polje z zneski v drugi vrstici na telefonu ni potrebno */
             .row-second > .col-plain { display: none; }
