@@ -339,12 +339,23 @@
         }
 
         /* Vrstice so se dotikale: gumb "-" zgornje vrstice je stal tik nad gumbom
-           "+" spodnje in zadnjo vrstico je bilo lahko izbrisati po nesreci.
-           Nad zadnjo vrstico je zato 10 px, med ostalimi 4 px.
+           spodnje. Med vrsticami so zato 4 px.
            Velja samo za Honorarje in Stroske - v Davkih je med vrsticami ze drsnik.
            Pri eni sami vrstici se ne sprozi: nima predhodnice. */
         .vrstice .cost-row + .cost-row { margin-top: 4px; }
-        .vrstice .cost-row + .cost-row:last-child { margin-top: 10px; }
+
+        /* 1g: gumb "+" ni vec v vrstici, ampak stoji sam pod njimi. Desno, v isti
+           navpicnici kot gumbi "-" nad njim - zato flex-end in nic zamika desno.
+           Nad njim je 10 px: isti razmik kot prej nad zadnjo vrstico, da se rdec "-"
+           in zelen "+" ne dotikata. Velja v vseh treh stolpcih z vrsticami, tudi v
+           Davkih, da gumb povsod stoji enako dalec od vsebine.
+           Prazen stolpec razmika ne potrebuje: gumb je takrat edini otrok. */
+        .add-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .add-row:first-child { margin-top: 0; }
 
         /* Gumb je enako visok kot vnosno polje ob njem: visine ne dolocamo, ampak
            jo prevzame od vrstice (align-self: stretch). Stalnih 35 px je pomenilo,
@@ -1070,10 +1081,13 @@
         const SLIDER_BASE_MAX = 30; // privzeti obseg drsnika (za natančno nastavljanje nizkih stopenj)
         const MAX_DISPLAY = 1e15;   // nad to mejo znesek ni več smiseln (in bi razbil prikaz)
 
-        // Privzeta vsebina stolpcev: prva vrstica ima ime, nadaljnje so prazne, vsi zneski 0
-        const DEFAULT_TAXES = [{ name: 'Davek', val: 0 }, { name: '', val: 0 }];
-        const DEFAULT_COSTS = [{ name: 'Stroški', val: 0 }, { name: '', val: 0 }];
-        const DEFAULT_BASES = [{ name: 'Honorar', val: 0 }, { name: '', val: 0 }];
+        // Privzeta vsebina stolpcev (1g): ENA vrstica z imenom, znesek 0.
+        // Prazna druga vrstica je odpadla - nove vrstice dodate z gumbom "+".
+        // Osnova ima dve imeni: neobdavcen del je Honorar, obdavcen Placilo.
+        const DEFAULT_TAXES = [{ name: 'Davek', val: 0 }];
+        const DEFAULT_COSTS = [{ name: 'Stroški', val: 0 }];
+        const DEFAULT_BASES = [{ name: 'Honorar', val: 0 }];
+        const DEFAULT_BASES_TAXED = [{ name: 'Plačilo', val: 0 }];
 
         const TRAVEL_FIELDS = ['km', 'poraba', 'gorivo', 'amort'];
 
@@ -1299,8 +1313,10 @@
         }
 
         // ---------- Gumbi vrstic ----------
-        // Zeleni "+" je vedno na ZADNJI vrstici stolpca, vse ostale imajo rdeči "-".
-        // Ker zadnje vrstice ni mogoče odstraniti, v stolpcu vedno ostane vsaj ena vrstica.
+        // Od koraka 1g: zeleni "+" NI vec v vrstici. Vsaka vrstica ima rdeci "-",
+        // gumb "+" pa stoji sam pod vrsticami, v svoji vrstici brez vnosnih polj.
+        // Posledica: stolpec sme ostati cisto brez vrstic. Nazaj jih dobite z "+"
+        // ali s kosem - ta vrne privzeto vrstico z imenom.
         // Oznaka izračuna je zadnja števka v imenu vsebnika (npr. "costs-container-3" -> 3).
         function calcNumOf(containerId) {
             const m = String(containerId).match(/(\d+)$/);
@@ -1316,24 +1332,47 @@
             cost: { add: addCostRow, remove: removeCostRow }
         };
 
-        function setRowButton(btn, isLast, kind, containerId) {
-            btn.className = 'btn-action ' + (isLast ? 'btn-add' : 'btn-remove');
-            btn.innerText = isLast ? '+' : '-';
-            btn.title = isLast ? 'Dodaj vrstico' : 'Odstrani vrstico';
-            btn.onclick = isLast
-                ? function () { VRSTICE[kind].add(containerId); }
-                : function () { VRSTICE[kind].remove(btn); };
+        // Vsaka vrstica ima rdeci "-". Izjeme ni vec: pravilo "zadnja vrstica je
+        // drugacna" je s korakom 1g odpadlo.
+        function setRowButton(btn, kind) {
+            btn.className = 'btn-action btn-remove';
+            btn.innerText = '-';
+            btn.title = 'Odstrani vrstico';
+            btn.onclick = function () { VRSTICE[kind].remove(btn); };
+        }
+
+        // Gumb "+" je zadnji otrok vsebnika. Ce ga se ni, ga naredimo; sicer ga
+        // appendChild samo prestavi na konec - tako je vedno pod zadnjo vrstico,
+        // tudi ce je bila vrstica pravkar dodana za njim.
+        // Zivi ZNOTRAJ vsebnika iz dveh razlogov: ob zaprtju stolpca se skrije
+        // skupaj z vrsticami, rebuild* pa ga pocisti skupaj z njimi.
+        function zagotoviGumbDodaj(container, kind, containerId) {
+            let vrstica = container.querySelector('.add-row');
+            if (!vrstica) {
+                vrstica = document.createElement('div');
+                vrstica.className = 'add-row';
+                vrstica.innerHTML = '<button type="button" class="btn-action btn-add">+</button>';
+            }
+            const btn = vrstica.querySelector('button');
+            if (btn) {
+                btn.title = 'Dodaj vrstico';
+                btn.setAttribute('aria-label', 'Dodaj vrstico');
+                btn.onclick = function () { VRSTICE[kind].add(containerId); };
+            }
+            container.appendChild(vrstica);
         }
 
         function refreshButtons(containerId, kind) {
-            const rows = document.querySelectorAll('#' + containerId + ' .cost-row');
-            rows.forEach((row, i) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.querySelectorAll('.cost-row').forEach(row => {
                 const btn = row.querySelector('button');
-                if (btn) setRowButton(btn, i === rows.length - 1, kind, containerId);
+                if (btn) setRowButton(btn, kind);
             });
+            zagotoviGumbDodaj(container, kind, containerId);
             // Dodana ali odstranjena vrstica je sprememba stolpca: kos se odloci znova.
             // Ob nalaganju strani gumbov se ni - osvezitev takrat ne stori nicesar.
-            osveziKose(document.getElementById(containerId));
+            osveziKose(container);
         }
 
         // ---------- Osnova (honorarji) ----------
@@ -1482,8 +1521,12 @@
             const t = typeof item.val;
             return (t === 'string' || t === 'number') ? item.val : 0;
         }
+        // Prazen seznam NI isto kot manjkajoc. Od koraka 1g sme stolpec ostati brez
+        // vrstic; ce bi prazen seznam pomenil "uporabi privzeto", bi se izbrisane
+        // vrstice ob osvezitvi strani same vrnile. Privzeto velja le takrat, kadar
+        // zapisa sploh ni ali je pokvarjen.
         function rowsOr(arr, fallback) {
-            return (Array.isArray(arr) && arr.length) ? arr : fallback;
+            return Array.isArray(arr) ? arr : fallback;
         }
 
         // Koliko proge je zapolnjene. Safari zapolnjenega dela ne riše sam,
@@ -1572,9 +1615,10 @@
                 // Prevod starejsih podatkov: osnova je bila ena sama stevilka (npr. net1),
                 // odslej je seznam vrstic. Znesek postavimo v prvo vrstico, ime pa vpise
                 // uporabnik sam. Brez tega bi zneski ob prvem odprtju izginili.
+                const privzetaOsnova = c.taxed ? DEFAULT_BASES_TAXED : DEFAULT_BASES;
                 const legacyBases = (data[c.baseId] !== undefined && data[c.baseId] !== null)
-                    ? [{ name: 'Honorar', val: data[c.baseId] }, { name: '', val: 0 }]
-                    : DEFAULT_BASES;
+                    ? [{ name: privzetaOsnova[0].name, val: data[c.baseId] }]
+                    : privzetaOsnova;
                 rebuildBases('base-container-' + c.n, c.n, rowsOr(data['bases' + c.n], legacyBases));
 
                 TRAVEL_FIELDS.forEach(f => setVal(f + c.n, data[f + c.n]));
@@ -1808,8 +1852,15 @@
             saveToStorage();
         }
 
-        function privzetaVsebina(vrsta) {
-            if (vrsta === 'base') return DEFAULT_BASES;
+        // Stolpca 3 in 4 sta obdavcena dela (glej CALCS). Stevilka stolpca prihaja
+        // iz oznake polja in je zato niz - primerjamo prek Number.
+        function jeObdavcen(n) {
+            const c = CALCS.find(x => x.n === Number(n));
+            return !!(c && c.taxed);
+        }
+
+        function privzetaVsebina(vrsta, n) {
+            if (vrsta === 'base') return jeObdavcen(n) ? DEFAULT_BASES_TAXED : DEFAULT_BASES;
             if (vrsta === 'costs') return DEFAULT_COSTS;
             if (vrsta === 'tax') return DEFAULT_TAXES;
             return PRIVZETA_POT;
@@ -1845,7 +1896,7 @@
             const vrsta = vrstaStolpca(kljuc);
             const n = stevilkaStolpca(kljuc);
             if (!vrsta || !n) return true;
-            return enakaVsebina(posnemiStolpec(vrsta, n), privzetaVsebina(vrsta));
+            return enakaVsebina(posnemiStolpec(vrsta, n), privzetaVsebina(vrsta, n));
         }
 
         function jeDelZacetni(mreza) {
@@ -1934,7 +1985,7 @@
                 // ponastavitvijo - sicer bi velika razveljavitev vrnila prazno.
                 posnetek[k] = POMNIK[k] || posnemiStolpec(vrsta, n);
                 delete POMNIK[k];
-                postaviStolpec(vrsta, n, privzetaVsebina(vrsta));
+                postaviStolpec(vrsta, n, privzetaVsebina(vrsta, n));
             });
             POMNIK_DELA[kljuc] = posnetek;
             osveziDel(mreza);
@@ -1965,7 +2016,7 @@
             // Ce okna z vprasanjem ni (testno okolje), se ponastavitev izvede.
             if (typeof confirm === 'function' && confirm(VPRASANJE) !== true) return;
             POMNIK[kljuc] = posnemiStolpec(vrsta, n);
-            postaviStolpec(vrsta, n, privzetaVsebina(vrsta));
+            postaviStolpec(vrsta, n, privzetaVsebina(vrsta, n));
             osveziRazveljavitev(col);
         }
 
