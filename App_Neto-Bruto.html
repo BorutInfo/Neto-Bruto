@@ -147,14 +147,15 @@
             text-align: left;
             margin-bottom: 5px;
             border-bottom: 1px solid #ccc;   /* enako kot obroba vnosnih polj; danes nevidno, prekrije ga 2px barvna crta */
+            /* Zrak nad naslovom in pod njim je ENAK (Borutova izbira B, 5. 8. 2026):
+               nad besedilom je rob stolpca (15 px) + 4 px zamika, pod njim natanko
+               toliko. Merjeno na napravi je bilo prej 20 nad in 17 pod.
+               Najmanjse visine ni vec - visino da podloga, ker sicer njen ostanek
+               tiho pade pod besedilo in razmerje podre. Povrsina za dotik je s tem
+               45 px na Macu in 40 px na telefonu, torej vec kot prej. */
             padding-top: 4px;      /* enak zamik kot v zaprtem traku */
-            padding-bottom: 5px;
+            padding-bottom: 19px;
             padding-right: 24px;   /* prostor za puščico */
-            /* 28 px + 4 px zgoraj + 5 px spodaj = 37 px povrsine za dotik.
-               Prej je bilo 44 px samega prostora za besedilo, a je crta pod
-               naslovom takrat visela 30 px pod njim - naslov je namrec 4. 8. 2026
-               odsel na vrh. Borut je izbral tesnejso crto (moznost B). */
-            min-height: 28px;
             display: flex;
             /* Naslov stoji na VRHU svojega prostora, ne na sredini. Prej je bil
                sredinjen v 44 px in je ob odpiranju stolpca poskocil navzdol -
@@ -366,9 +367,15 @@
             flex-shrink: 0;
         }
         .btn-add { background-color: #2ecc71; }
-        .btn-add:hover { background-color: #27ae60; }
         .btn-remove { background-color: #e74c3c; }
-        .btn-remove:hover { background-color: #c0392b; }
+        /* Temnejsa barva velja samo tam, kjer miska res obstaja. Na telefonu je
+           stanje "miska je nad gumbom" obviselo na zadnjem pritisnjenem gumbu,
+           dokler se nisi dotaknil drugam (Borut, 5. 8. 2026). Kratek blisk ob
+           dotiku ni nas - rise ga telefon sam in ostane. */
+        @media (hover: hover) {
+            .btn-add:hover { background-color: #27ae60; }
+            .btn-remove:hover { background-color: #c0392b; }
+        }
 
         /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
            ne ukine. Zato ga dobi vsak element posebej. Drsniki ostanejo pri 'auto',
@@ -720,6 +727,16 @@
             /* Kljukica stoji pri naslovu v obeh stanjih. 23 px = 10 px roba
                stolpca + 4 px zamika naslova + polovica vrstice. */
             .col-header::after { top: 23px; }
+
+            /* Rob stolpca je na telefonu 10 px, zato je tudi zrak pod naslovom 14
+               (10 + 4 zamika), ne 19 kot na Macu. */
+            .col-header { padding-bottom: 14px; }
+
+            /* Prazno mesto stolpca Davki je na telefonu odvec: stolpci stojijo eden
+               pod drugim in prazna vrstica podvoji razmik med 1. in 3. stolpcem
+               (izmerjeno 123 proti 61 pikam). Na Macu ostane - tam poravnava
+               stolpce z zgornjo vrsto. */
+            .col-empty { display: none; }
 
             /* Podvojeno polje z zneski v drugi vrstici na telefonu ni potrebno */
             .row-second > .col-plain { display: none; }
