@@ -134,6 +134,13 @@
         .col-header {
             font-weight: 600;
             font-size: 16px;
+            /* Visina vrstice mora biti ista v odprtem in zaprtem stanju. Zaprt trak
+               na telefonu ima 1.4 (da se strehica nad C in S ne odreze, ker je
+               besedilo tam obrezano), odprt pa je imel privzeto ~1.2. Crke stojijo
+               na sredini vrstice, zato jih je visja vrstica potisnila ~1,5 px nizje
+               in naslov je ob odpiranju skocil. Na Macu tega pravila ni, zato je
+               bilo tam ze prej v redu (Borut, 4. 8. 2026). */
+            line-height: 1.4;
             color: #495057;
             text-transform: uppercase;
             letter-spacing: 0.5px;
