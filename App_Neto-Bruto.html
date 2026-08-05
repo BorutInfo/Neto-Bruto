@@ -756,325 +756,8 @@
 </head>
 <body>
 
-    <div class="container">
-        <h2 class="sklop-naslov">
-            <span class="sklop-ime">NETO → BRUTO</span>
-            <span class="sklop-znesek tot-total-1">0</span>
-        </h2>
-
-        <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
-        <div class="calc-grid">
-            <div class="col">
-                <div class="col-header">1. Neobdavčen Neto</div>
-                <div id="base-container-1" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj osnova</div>
-                    <div class="mini-result" id="sum-base-1">0,00 €</div>
-                    <div class="share-line" id="share-base-1">+0,00 %</div>
-                    <div class="share-line" id="basis-base-1">Do 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">2. Davki (%)</div>
-                <div id="taxes-container-1"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj davek</div>
-                    <div class="mini-result" id="sum-tax-1">0,00 %</div>
-                    <div class="share-line" id="share-tax-1">0,00 €</div>
-                    <div class="share-line" id="basis-tax-1">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-1" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj stroški</div>
-                    <div class="mini-result" id="sum-costs-1">0,00 €</div>
-                    <div class="share-line" id="share-costs-1">0,00 %</div>
-                    <div class="share-line" id="basis-costs-1">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">4. Potni stroški</div>
-                <div class="pot-polja">
-                    <label>km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km1" value="0">
-                    <label>Poraba l/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba1" value="0">
-                    <label title="Cena goriva.">Cena g. €/l</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo1" value="0">
-                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort1" value="0">
-                </div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj pot</div>
-                    <div class="mini-result" id="sum-travel-1">0,00 €</div>
-                    <div class="share-line" id="share-travel-1">0,00 %</div>
-                    <div class="share-line" id="basis-travel-1">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col col-plain">
-                <div class="result-box">
-                    <div class="result-caption">
-                        <span class="cap-evro">€</span>
-                        <span class="cap-levo">NETO</span>
-                        <span class="cap-desno">BRUTO</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
-                        <div class="result-osnova osn-untaxed-1">0</div>
-                        <div class="result-value tot-untaxed-1" id="res1">0</div>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
-                        <div class="result-osnova osn-taxed-1">0</div>
-                        <div class="result-value tot-taxed-1" id="res3">0</div>
-                    </div>
-                    <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
-                        <div class="result-osnova osn-total-1">0</div>
-                        <div class="result-value tot-total-1" id="restot1">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vrstica 2: obdavčen prihodek (davek je že plačan, zato ga ni) -->
-        <div class="calc-grid row-second">
-            <div class="col">
-                <div class="col-header">1. Obdavčen Neto</div>
-                <div id="base-container-3" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj osnova</div>
-                    <div class="mini-result" id="sum-base-3">0,00 €</div>
-                    <div class="share-line" id="share-base-3">+0,00 %</div>
-                    <div class="share-line" id="basis-base-3">Do 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col-empty" aria-hidden="true"></div>
-
-            <div class="col">
-                <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-3" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj stroški</div>
-                    <div class="mini-result" id="sum-costs-3">0,00 €</div>
-                    <div class="share-line" id="share-costs-3">0,00 %</div>
-                    <div class="share-line" id="basis-costs-3">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">4. Potni stroški</div>
-                <div class="pot-polja">
-                    <label>km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km3" value="0">
-                    <label>Poraba l/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba3" value="0">
-                    <label title="Cena goriva.">Cena g. €/l</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo3" value="0">
-                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort3" value="0">
-                </div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj pot</div>
-                    <div class="mini-result" id="sum-travel-3">0,00 €</div>
-                    <div class="share-line" id="share-travel-3">0,00 %</div>
-                    <div class="share-line" id="basis-travel-3">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col col-plain">
-                <div class="result-box">
-                    <div class="result-caption">
-                        <span class="cap-evro">€</span>
-                        <span class="cap-levo">NETO</span>
-                        <span class="cap-desno">BRUTO</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
-                        <div class="result-osnova osn-untaxed-1">0</div>
-                        <div class="result-value tot-untaxed-1">0</div>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
-                        <div class="result-osnova osn-taxed-1">0</div>
-                        <div class="result-value tot-taxed-1">0</div>
-                    </div>
-                    <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
-                        <div class="result-osnova osn-total-1">0</div>
-                        <div class="result-value tot-total-1">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container">
-        <h2 class="sklop-naslov">
-            <span class="sklop-ime">BRUTO → NETO</span>
-            <span class="sklop-znesek tot-total-2">0</span>
-        </h2>
-
-        <!-- Vrstica 1: neobdavčen prihodek (davek se obračuna) -->
-        <div class="calc-grid">
-            <div class="col">
-                <div class="col-header">1. Neobdavčen Bruto</div>
-                <div id="base-container-2" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj osnova</div>
-                    <div class="mini-result" id="sum-base-2">0,00 €</div>
-                    <div class="share-line" id="share-base-2">+0,00 %</div>
-                    <div class="share-line" id="basis-base-2">Do 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">2. Davki (%)</div>
-                <div id="taxes-container-2"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj davek</div>
-                    <div class="mini-result" id="sum-tax-2">0,00 %</div>
-                    <div class="share-line" id="share-tax-2">0,00 €</div>
-                    <div class="share-line" id="basis-tax-2">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-2" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj stroški</div>
-                    <div class="mini-result" id="sum-costs-2">0,00 €</div>
-                    <div class="share-line" id="share-costs-2">0,00 %</div>
-                    <div class="share-line" id="basis-costs-2">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">4. Potni stroški</div>
-                <div class="pot-polja">
-                    <label>km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km2" value="0">
-                    <label>Poraba l/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba2" value="0">
-                    <label title="Cena goriva.">Cena g. €/l</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo2" value="0">
-                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort2" value="0">
-                </div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj pot</div>
-                    <div class="mini-result" id="sum-travel-2">0,00 €</div>
-                    <div class="share-line" id="share-travel-2">0,00 %</div>
-                    <div class="share-line" id="basis-travel-2">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col col-plain">
-                <div class="result-box">
-                    <div class="result-caption">
-                        <span class="cap-evro">€</span>
-                        <span class="cap-levo">BRUTO</span>
-                        <span class="cap-desno">NETO</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
-                        <div class="result-osnova osn-untaxed-2">0</div>
-                        <div class="result-value tot-untaxed-2" id="res2">0</div>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
-                        <div class="result-osnova osn-taxed-2">0</div>
-                        <div class="result-value tot-taxed-2" id="res4">0</div>
-                    </div>
-                    <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
-                        <div class="result-osnova osn-total-2">0</div>
-                        <div class="result-value tot-total-2" id="restot2">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vrstica 2: obdavčen prihodek (davek je že plačan, zato ga ni) -->
-        <div class="calc-grid row-second">
-            <div class="col">
-                <div class="col-header">1. Obdavčen Bruto</div>
-                <div id="base-container-4" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj osnova</div>
-                    <div class="mini-result" id="sum-base-4">0,00 €</div>
-                    <div class="share-line" id="share-base-4">+0,00 %</div>
-                    <div class="share-line" id="basis-base-4">Do 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col-empty" aria-hidden="true"></div>
-
-            <div class="col">
-                <div class="col-header">3. Drugi stroški</div>
-                <div id="costs-container-4" class="vrstice"></div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj stroški</div>
-                    <div class="mini-result" id="sum-costs-4">0,00 €</div>
-                    <div class="share-line" id="share-costs-4">0,00 %</div>
-                    <div class="share-line" id="basis-costs-4">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="col-header">4. Potni stroški</div>
-                <div class="pot-polja">
-                    <label>km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="km4" value="0">
-                    <label>Poraba l/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="poraba4" value="0">
-                    <label title="Cena goriva.">Cena g. €/l</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="gorivo4" value="0">
-                    <label title="Amortizacija. Znesek vzdrževanja na 100 km.">Amortiz. €/100 km</label>
-                    <input type="text" inputmode="decimal" class="num-field nonneg" id="amort4" value="0">
-                </div>
-                <div class="summary-block">
-                    <div class="sum-label">Skupaj pot</div>
-                    <div class="mini-result" id="sum-travel-4">0,00 €</div>
-                    <div class="share-line" id="share-travel-4">0,00 %</div>
-                    <div class="share-line" id="basis-travel-4">Od 0,00 €</div>
-                </div>
-            </div>
-
-            <div class="col col-plain">
-                <div class="result-box">
-                    <div class="result-caption">
-                        <span class="cap-evro">€</span>
-                        <span class="cap-levo">BRUTO</span>
-                        <span class="cap-desno">NETO</span>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona ikona-neobdavcen" role="img" aria-label="Neobdavčen">%</span>
-                        <div class="result-osnova osn-untaxed-2">0</div>
-                        <div class="result-value tot-untaxed-2">0</div>
-                    </div>
-                    <div class="result-item">
-                        <span class="ikona" role="img" aria-label="Obdavčen">%</span>
-                        <div class="result-osnova osn-taxed-2">0</div>
-                        <div class="result-value tot-taxed-2">0</div>
-                    </div>
-                    <div class="result-item result-sum">
-                        <span class="ikona" role="img" aria-label="Skupaj">Σ</span>
-                        <div class="result-osnova osn-total-2">0</div>
-                        <div class="result-value tot-total-2">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Sklope nariše koda (korak 2). Tu je samo mesto, kamor jih postavi. -->
+    <div id="app"></div>
 
     <script>
         const MAX_TAX = 100;        // davek nad 100 % ni smiseln
@@ -1107,6 +790,116 @@
             { n: 1, untaxed: 1, taxed: 3 },
             { n: 2, untaxed: 2, taxed: 4 }
         ];
+
+        // ---------- Sestavljanje sklopov (korak 2) ----------
+        // Do tu so bili štirje sklopi napisani na roko: 321 vrstic telesa strani,
+        // v katerih se je isti zapis ponovil štirikrat z majhnimi razlikami.
+        // Odslej stoji v datoteki samo opis razlik, sklope pa nariše koda.
+        // Na zaslonu se ne spremeni nič - to je pogoj koraka.
+        //
+        // Številk izračunov (1 in 3 v prvi tabeli, 2 in 4 v drugi) tu NI: koda jih
+        // vzame iz CALCS. Tako sta oštevilčenje in shranjevanje na enem samem mestu.
+
+        const SKLOPI = [
+            { t: 1, ime: 'NETO → BRUTO', levo: 'NETO',  desno: 'BRUTO', enota: 'Neto'  },
+            { t: 2, ime: 'BRUTO → NETO', levo: 'BRUTO', desno: 'NETO',  enota: 'Bruto' }
+        ];
+
+        // Štirje stolpci ene vrstice, po vrsti. Beseda v 'vrsta' je hkrati oznaka
+        // seštevkov: sum-<vrsta>-N, share-<vrsta>-N, basis-<vrsta>-N.
+        // Naslov prvega stolpca ni zapisan, ker se sestavi iz besede sklopa:
+        // "1. Neobdavčen Neto", "1. Obdavčen Bruto" in tako naprej.
+        // Stolpec Davki stoji samo v neobdavčeni vrstici - v obdavčeni je davek
+        // že plačan in na njegovem mestu ostane prazno polje, ki drži poravnavo.
+        const STOLPCI = [
+            { vrsta: 'base',   naslov: null,               vsebnik: 'base-container-',  vrstice: true,
+              napis: 'Skupaj osnova',  sestevek: '0,00 €', delez: '+0,00 %', osnova: 'Do 0,00 €' },
+            { vrsta: 'tax',    naslov: '2. Davki (%)',     vsebnik: 'taxes-container-', vrstice: false, samoNeobdavcen: true,
+              napis: 'Skupaj davek',   sestevek: '0,00 %', delez: '0,00 €',  osnova: 'Od 0,00 €' },
+            { vrsta: 'costs',  naslov: '3. Drugi stroški', vsebnik: 'costs-container-', vrstice: true,
+              napis: 'Skupaj stroški', sestevek: '0,00 €', delez: '0,00 %',  osnova: 'Od 0,00 €' },
+            { vrsta: 'travel', naslov: '4. Potni stroški', pot: true,
+              napis: 'Skupaj pot',     sestevek: '0,00 €', delez: '0,00 %',  osnova: 'Od 0,00 €' }
+        ];
+
+        // Štiri stalna polja stolpca s potjo. Oznake polj so v TRAVEL_FIELDS,
+        // tu stojijo njihovi napisi in razlage ob dotiku.
+        const POT_VRSTICE = [
+            { polje: 'km',     napis: 'km' },
+            { polje: 'poraba', napis: 'Poraba l/100 km' },
+            { polje: 'gorivo', napis: 'Cena g. €/l',       opis: 'Cena goriva.' },
+            { polje: 'amort',  napis: 'Amortiz. €/100 km', opis: 'Amortizacija. Znesek vzdrževanja na 100 km.' }
+        ];
+
+        function potPolja(n) {
+            return POT_VRSTICE.map(v =>
+                '<label' + (v.opis ? ' title="' + v.opis + '"' : '') + '>' + v.napis + '</label>' +
+                '<input type="text" inputmode="decimal" class="num-field nonneg" id="' + v.polje + n + '" value="0">'
+            ).join('');
+        }
+
+        // Vrstice v stolpcih (honorarji, davki, stroški) tu ne nastanejo - te riše
+        // loadFromStorage ob odprtju strani, tako kot doslej. Tu nastane le vsebnik.
+        function sestaviStolpec(s, sklop, c) {
+            if (s.samoNeobdavcen && c.taxed) return '<div class="col-empty" aria-hidden="true"></div>';
+            const naslov = s.naslov || ('1. ' + (c.taxed ? 'Obdavčen ' : 'Neobdavčen ') + sklop.enota);
+            const jedro = s.pot
+                ? '<div class="pot-polja">' + potPolja(c.n) + '</div>'
+                : '<div id="' + s.vsebnik + c.n + '"' + (s.vrstice ? ' class="vrstice"' : '') + '></div>';
+            return '<div class="col">' +
+                '<div class="col-header">' + naslov + '</div>' +
+                jedro +
+                '<div class="summary-block">' +
+                    '<div class="sum-label">' + s.napis + '</div>' +
+                    '<div class="mini-result" id="sum-' + s.vrsta + '-' + c.n + '">' + s.sestevek + '</div>' +
+                    '<div class="share-line" id="share-' + s.vrsta + '-' + c.n + '">' + s.delez + '</div>' +
+                    '<div class="share-line" id="basis-' + s.vrsta + '-' + c.n + '">' + s.osnova + '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        // Povzetek visi na ŠTEVILKI TABELE, ne izračuna: obe vrstici sklopa kažeta
+        // ista zneska. Zato je v obeh vrsticah enak in se v spodnji le ponovi.
+        function sestaviPovzetek(sklop) {
+            const vrstica = (razred, oznaka, znak, kaj) =>
+                '<div class="result-item' + razred + '">' +
+                    '<span class="ikona' + (kaj === 'untaxed' ? ' ikona-neobdavcen' : '') +
+                        '" role="img" aria-label="' + oznaka + '">' + znak + '</span>' +
+                    '<div class="result-osnova osn-' + kaj + '-' + sklop.t + '">0</div>' +
+                    '<div class="result-value tot-' + kaj + '-' + sklop.t + '">0</div>' +
+                '</div>';
+            return '<div class="col col-plain"><div class="result-box">' +
+                '<div class="result-caption">' +
+                    '<span class="cap-evro">€</span>' +
+                    '<span class="cap-levo">' + sklop.levo + '</span>' +
+                    '<span class="cap-desno">' + sklop.desno + '</span>' +
+                '</div>' +
+                vrstica('', 'Neobdavčen', '%', 'untaxed') +
+                vrstica('', 'Obdavčen', '%', 'taxed') +
+                vrstica(' result-sum', 'Skupaj', 'Σ', 'total') +
+            '</div></div>';
+        }
+
+        // Prva vrstica sklopa je neobdavčena, druga obdavčena - vrstni red prevzame
+        // iz CALCS. Druga vrstica nosi razred row-second, po katerem jo loči slog.
+        function sestaviSklope() {
+            const mesto = document.getElementById('app');
+            if (!mesto) return;
+            mesto.innerHTML = SKLOPI.map(sklop => {
+                const vrstice = CALCS.filter(c => c.table === sklop.t).map((c, i) =>
+                    '<div class="calc-grid' + (i ? ' row-second' : '') + '">' +
+                        STOLPCI.map(s => sestaviStolpec(s, sklop, c)).join('') +
+                        sestaviPovzetek(sklop) +
+                    '</div>'
+                ).join('');
+                return '<div class="container">' +
+                    '<h2 class="sklop-naslov">' +
+                        '<span class="sklop-ime">' + sklop.ime + '</span>' +
+                        '<span class="sklop-znesek tot-total-' + sklop.t + '">0</span>' +
+                    '</h2>' + vrstice +
+                '</div>';
+            }).join('');
+        }
 
         // ---------- Branje števil ----------
         // Razume slovenski zapis: vejica kot decimalno ločilo, pika/presledek kot ločilo tisočic,
@@ -2321,7 +2114,10 @@
             shraniPogled();
         });
 
-        // Ob odprtju strani: zgradi vrstice (shranjene ali privzete) in izračunaj
+        // Ob odprtju strani: najprej nariši sklope, nato zgradi vrstice
+        // (shranjene ali privzete) in izračunaj. Vrstni red je pomemben -
+        // vse spodnje dela nad stolpci, ki jih postavi sestaviSklope.
+        sestaviSklope();
         loadFromStorage();
         postaviGumbeStolpcev();
         oblikujVsaPolja();
