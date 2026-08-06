@@ -16,34 +16,20 @@
             touch-action: manipulation;
         }
 
-        /* ---------- KORAK 2b, POSKUS: telo strani se ne premika ----------
-           Doslej je drsala cela stran. Zato je iPhone ob zaprtju tipkovnice
-           lahko premaknil stran, kamor se mu je zdelo - in vnosno polje je
-           koncalo pod prilepljenim Povzetkom (napaka iz koraka 1d).
+        /* ---------- KORAK 2b, POSKUS 2: rezerviran prostor na vrhu ----------
+           Kadar brskalnik sam spravi element na zaslon (npr. vnosno polje po
+           zaprtju tipkovnice), naj zgoraj pusti toliko praznine.
 
-           Odslej je telo pribito na velikost zaslona in se ne premika.
-           Vsebina drsi v okvirju znotraj njega. Safari s tem na ravni strani
-           nima vec kaj premakniti.
+           V koraku 1d je bilo isto povedano z DRUGE strani - pravilo je stalo
+           na vnosnem polju (scroll-margin-top) in ga je Safari prezrl. Tu stoji
+           na drsnem prostoru strani. Druga lastnost, druga pot skozi brskalnik.
 
-           TO JE POSKUS, ne dokoncna resitev. Na napravi se preverja dvoje:
-             1. ali se vnosno polje se vedno skrije pod Povzetek,
-             2. ali se Safarijeva naslovna vrstica se skrije ob podrsu.
-           Ce je odgovor na 2 "ne", poskus stane ~60 pik visine in ga vrnemo.
+           200 px je GROBA stevilka za poskus, ne izmerjena visina Povzetka.
+           Preverja se samo, ali Safari pravilo sploh upostevA. Ce ga, se
+           stevilka nadomesti z izmerjeno visino.
 
-           Rob strani ostane na telesu, ne na okvirju - zato box-sizing,
-           sicer bi 100 % visine plus 2x20 px roba preseglo zaslon. */
-        html { height: 100%; }
-        body {
-            height: 100%;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-        #okvir {
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
+           Ce ga ne upostevA, se ta blok izbrise in gremo na predlog 4. */
+        html { scroll-padding-top: 200px; }
 
         .container {
             max-width: 1200px;
@@ -786,11 +772,8 @@
 </head>
 <body>
 
-    <!-- Korak 2b: vsa vidna vsebina drsi v tem okvirju, ne v strani sami. -->
-    <div id="okvir">
-        <!-- Sklope nariše koda (korak 2). Tu je samo mesto, kamor jih postavi. -->
-        <div id="app"></div>
-    </div>
+    <!-- Sklope nariše koda (korak 2). Tu je samo mesto, kamor jih postavi. -->
+    <div id="app"></div>
 
     <script>
         const MAX_TAX = 100;        // davek nad 100 % ni smiseln
