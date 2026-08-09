@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
     <title>Kalkulator: Napredni Bruto in Neto</title>
     <style>
         body {
@@ -15,21 +15,6 @@
                Scipanje z dvema prstoma OSTANE - potrebuje ga korak 11. */
             touch-action: manipulation;
         }
-
-        /* ---------- KORAK 2b, POSKUS 2: rezerviran prostor na vrhu ----------
-           Kadar brskalnik sam spravi element na zaslon (npr. vnosno polje po
-           zaprtju tipkovnice), naj zgoraj pusti toliko praznine.
-
-           V koraku 1d je bilo isto povedano z DRUGE strani - pravilo je stalo
-           na vnosnem polju (scroll-margin-top) in ga je Safari prezrl. Tu stoji
-           na drsnem prostoru strani. Druga lastnost, druga pot skozi brskalnik.
-
-           200 px je GROBA stevilka za poskus, ne izmerjena visina Povzetka.
-           Preverja se samo, ali Safari pravilo sploh upostevA. Ce ga, se
-           stevilka nadomesti z izmerjeno visino.
-
-           Ce ga ne upostevA, se ta blok izbrise in gremo na predlog 4. */
-        html { scroll-padding-top: 200px; }
 
         .container {
             max-width: 1200px;
@@ -738,6 +723,33 @@
                 top: 0;
                 z-index: 20;
             }
+
+            /* ---------- Samomerljiva visina Povzetka (7. 8. 2026) ----------
+               Kadar brskalnik SAM pripelje vnosno polje na zaslon (npr. po
+               zaprtju tipkovnice), naj zgoraj pusti toliko prostora, kot je
+               visok prilepljen Povzetek, plus 8 px zraka.
+
+               Visina se MERI, ne vpisuje - aplikacija gre v trgovini in naprav
+               ne poznamo. Meri jo meriPovzetek() na koncu skripta.
+
+               Pravilo stoji na DRSNEM PROSTORU STRANI (scroll-padding-top na
+               html). V koraku 1d je isto stalo na vnosnem polju
+               (scroll-margin-top) in ga je Safari prezrl. Druga lastnost,
+               druga pot skozi brskalnik.
+
+               Zakaj znotraj tega bloka: na Macu Povzetek NI prilepljen, je peti
+               stolpec, visok kot cela vrstica - rezerviral bi pol zaslona. Ko
+               bo korak 11 Mac preklopil na telefonsko postavitev, se pravilo
+               vklopi samo od sebe, ker je vezano na isti pogoj.
+
+               192 + 8 = 200: ce merjenje ne stece (star brskalnik brez
+               ResizeObserver), ostane natanko dosedanje vedenje.
+
+               POZOR: to ni straza, ki bi prostor drzala prazen. Izvede se SAMO
+               takrat, kadar brskalnik kaj premika. Ce je polje ze vidno - tudi
+               ce lezi pod Povzetkom - se ne zgodi nic. Deluje po ovinku.
+               Glej Obnova_Ustavljanje-po-tipkovnici_26.8.7.docx, razdelek 17. */
+            html { scroll-padding-top: calc(var(--povzetek-h, 192px) + 8px); }
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
             .result-item { margin-bottom: 4px; }
@@ -2130,6 +2142,37 @@
             shraniPogled();
         });
 
+        // ---------- Merjenje Povzetka (7. 8. 2026) ----------
+        // Izmeri prilepljen Povzetek in njegovo višino zapiše na koren strani.
+        // Prebere jo pravilo scroll-padding-top v @media (max-width: 900px).
+        //
+        // Vsi Povzetki imajo enako zgradbo, zato zadošča najvišji vidni.
+        // Zaprt sklop da 0 in v računu ne sodeluje.
+        const POVZETKI = '.calc-grid:not(.row-second) > .col-plain';
+
+        function meriPovzetek() {
+            const koren = document.documentElement;
+            if (!koren || !koren.style) return;   // varovalo: shim korena ne pozna
+            const polja = document.querySelectorAll(POVZETKI);
+            let najvisji = 0;
+            for (let i = 0; i < polja.length; i++) {
+                const h = polja[i].offsetHeight || 0;
+                if (h > najvisji) najvisji = h;
+            }
+            if (najvisji > 0) koren.style.setProperty('--povzetek-h', najvisji + 'px');
+        }
+
+        // Povzetek zraste ali se skrči sam od sebe: ob zaprtju sklopa, obratu
+        // telefona, naloženi pisavi, v koraku 5 ob dodani vrstici variante.
+        // Zato se ne meri enkrat, ampak se ga opazuje.
+        function opazujPovzetek() {
+            meriPovzetek();
+            if (typeof ResizeObserver !== 'function') return;   // shim ga ne pozna
+            const opazovalec = new ResizeObserver(meriPovzetek);
+            const polja = document.querySelectorAll(POVZETKI);
+            for (let i = 0; i < polja.length; i++) opazovalec.observe(polja[i]);
+        }
+
         // Ob odprtju strani: najprej nariši sklope, nato zgradi vrstice
         // (shranjene ali privzete) in izračunaj. Vrstni red je pomemben -
         // vse spodnje dela nad stolpci, ki jih postavi sestaviSklope.
@@ -2139,6 +2182,7 @@
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
+        opazujPovzetek();
     </script>
 </body>
 </html>
