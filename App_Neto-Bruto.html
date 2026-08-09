@@ -715,13 +715,16 @@
             }
             .col.zaprt .mini-result { text-align: right; }
 
-            /* Polje s končnimi zneski skoči na vrh in ostane prilepljeno,
-               da so zneski med vnašanjem ves čas pred očmi. */
+            /* POSKUS 9. 8. 2026 - NELEPLJENJE. Povzetek ostane na vrhu sklopa
+               (order: -1), a se drsi s stranjo. Odvzeti so position: sticky,
+               top in z-index. Nic drugega ni spremenjeno in nic premaknjeno.
+               Namen: izmeriti, kako se Safari obnasa, ko na vrhu ni nicesar
+               prilepljenega. Vrnitev: App_Neto-Bruto_pred-nelepljenjem.html.
+               Preverjanje v regression_tests.js (vrstica 378) bo padlo - to je
+               pravilno, ker straži dosedanjo odlocitev. Ne popravljaj ga, dokler
+               odlocitev ni sprejeta. */
             .calc-grid > .col-plain {
                 order: -1;
-                position: sticky;
-                top: 0;
-                z-index: 20;
             }
 
             /* ---------- Samomerljiva visina Povzetka (7. 8. 2026) ----------
