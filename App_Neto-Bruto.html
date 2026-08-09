@@ -715,49 +715,15 @@
             }
             .col.zaprt .mini-result { text-align: right; }
 
-            /* POSKUS 9. 8. 2026 - NELEPLJENJE. Povzetek ostane na vrhu sklopa
-               (order: -1), a se drsi s stranjo. Odvzeti so position: sticky,
-               top in z-index. Nic drugega ni spremenjeno in nic premaknjeno.
-               Namen: izmeriti, kako se Safari obnasa, ko na vrhu ni nicesar
-               prilepljenega. Vrnitev: App_Neto-Bruto_pred-nelepljenjem.html.
-               Preverjanje v regression_tests.js (vrstica 378) bo padlo - to je
-               pravilno, ker straži dosedanjo odlocitev. Ne popravljaj ga, dokler
-               odlocitev ni sprejeta. */
+            /* Polje s koncnimi zneski stoji na vrhu sklopa, nad vsemi stirimi
+               stolpci (na telefonu je mreza en sam stolpec). Drsi s stranjo kot
+               vse ostalo - NI prilepljeno. Lepljenje je bilo odstranjeno
+               9. 8. 2026: prav ono je z rezervacijo prostora povzrocalo, da je
+               vnosno polje ob prvi vtipkani crki skocilo pod Povzetek. */
             .calc-grid > .col-plain {
                 order: -1;
             }
 
-            /* ---------- Samomerljiva visina Povzetka (7. 8. 2026) ----------
-               Kadar brskalnik SAM pripelje vnosno polje na zaslon (npr. po
-               zaprtju tipkovnice), naj zgoraj pusti toliko prostora, kot je
-               visok prilepljen Povzetek, plus 8 px zraka.
-
-               Visina se MERI, ne vpisuje - aplikacija gre v trgovini in naprav
-               ne poznamo. Meri jo meriPovzetek() na koncu skripta.
-
-               Pravilo stoji na DRSNEM PROSTORU STRANI (scroll-padding-top na
-               html). V koraku 1d je isto stalo na vnosnem polju
-               (scroll-margin-top) in ga je Safari prezrl. Druga lastnost,
-               druga pot skozi brskalnik.
-
-               Zakaj znotraj tega bloka: na Macu Povzetek NI prilepljen, je peti
-               stolpec, visok kot cela vrstica - rezerviral bi pol zaslona. Ko
-               bo korak 11 Mac preklopil na telefonsko postavitev, se pravilo
-               vklopi samo od sebe, ker je vezano na isti pogoj.
-
-               192 + 8 = 200: ce merjenje ne stece (star brskalnik brez
-               ResizeObserver), ostane natanko dosedanje vedenje.
-
-               POZOR: to ni straza, ki bi prostor drzala prazen. Izvede se SAMO
-               takrat, kadar brskalnik kaj premika. Ce je polje ze vidno - tudi
-               ce lezi pod Povzetkom - se ne zgodi nic. Deluje po ovinku.
-               Glej Obnova_Ustavljanje-po-tipkovnici_26.8.7.docx, razdelek 17. */
-            /* POSKUS 9. 8. 2026 - BREZ REZERVACIJE. Vrstica
-               html { scroll-padding-top: calc(var(--povzetek-h, 192px) + 8px); }
-               je odvzeta, da se vidi, kaj Safari naredi sam od sebe.
-               meriPovzetek() tece naprej, a njegove vrednosti nihce ne bere -
-               namenoma, da je spremenjena ena sama stvar.
-               Vrnitev: App_Neto-Bruto_pred-brez-rezervacije.html */
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
             .result-item { margin-bottom: 4px; }
@@ -2150,37 +2116,6 @@
             shraniPogled();
         });
 
-        // ---------- Merjenje Povzetka (7. 8. 2026) ----------
-        // Izmeri prilepljen Povzetek in njegovo višino zapiše na koren strani.
-        // Prebere jo pravilo scroll-padding-top v @media (max-width: 900px).
-        //
-        // Vsi Povzetki imajo enako zgradbo, zato zadošča najvišji vidni.
-        // Zaprt sklop da 0 in v računu ne sodeluje.
-        const POVZETKI = '.calc-grid:not(.row-second) > .col-plain';
-
-        function meriPovzetek() {
-            const koren = document.documentElement;
-            if (!koren || !koren.style) return;   // varovalo: shim korena ne pozna
-            const polja = document.querySelectorAll(POVZETKI);
-            let najvisji = 0;
-            for (let i = 0; i < polja.length; i++) {
-                const h = polja[i].offsetHeight || 0;
-                if (h > najvisji) najvisji = h;
-            }
-            if (najvisji > 0) koren.style.setProperty('--povzetek-h', najvisji + 'px');
-        }
-
-        // Povzetek zraste ali se skrči sam od sebe: ob zaprtju sklopa, obratu
-        // telefona, naloženi pisavi, v koraku 5 ob dodani vrstici variante.
-        // Zato se ne meri enkrat, ampak se ga opazuje.
-        function opazujPovzetek() {
-            meriPovzetek();
-            if (typeof ResizeObserver !== 'function') return;   // shim ga ne pozna
-            const opazovalec = new ResizeObserver(meriPovzetek);
-            const polja = document.querySelectorAll(POVZETKI);
-            for (let i = 0; i < polja.length; i++) opazovalec.observe(polja[i]);
-        }
-
         // Ob odprtju strani: najprej nariši sklope, nato zgradi vrstice
         // (shranjene ali privzete) in izračunaj. Vrstni red je pomemben -
         // vse spodnje dela nad stolpci, ki jih postavi sestaviSklope.
@@ -2190,7 +2125,6 @@
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
-        opazujPovzetek();
     </script>
 </body>
 </html>
