@@ -752,7 +752,12 @@
                takrat, kadar brskalnik kaj premika. Ce je polje ze vidno - tudi
                ce lezi pod Povzetkom - se ne zgodi nic. Deluje po ovinku.
                Glej Obnova_Ustavljanje-po-tipkovnici_26.8.7.docx, razdelek 17. */
-            html { scroll-padding-top: calc(var(--povzetek-h, 192px) + 8px); }
+            /* POSKUS 9. 8. 2026 - BREZ REZERVACIJE. Vrstica
+               html { scroll-padding-top: calc(var(--povzetek-h, 192px) + 8px); }
+               je odvzeta, da se vidi, kaj Safari naredi sam od sebe.
+               meriPovzetek() tece naprej, a njegove vrednosti nihce ne bere -
+               namenoma, da je spremenjena ena sama stvar.
+               Vrnitev: App_Neto-Bruto_pred-brez-rezervacije.html */
             .col-plain .result-box { height: auto; padding: 10px 12px; }
             .result-caption { margin-bottom: 6px; padding-bottom: 4px; }
             .result-item { margin-bottom: 4px; }
