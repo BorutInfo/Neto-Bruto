@@ -275,58 +275,6 @@
            vnosna polja: oba imata enako tezo, zato odloci vrstni red. */
         input.zadnje { border-color: #3498db; }
 
-        /* ---------- Drsniki pri davkih ----------
-           Neaktivna proga je bila prebleda. Ko pa progi prevzamemo videz,
-           Safari PRENEHA sam risati zapolnjeni del in zamenjave zanj v CSS ni.
-           Zato je proga preliv, mejo med zapolnjenim in praznim delom (--del)
-           pa nastavi koda ob vsakem premiku (glej osveziProgo).
-           Siva: #d3d3d3 (privzeta v brskalniku), potemnjena za 8 % -> #c2c2c2.
-           Pot do te vrednosti: 30 % in 15 % sta bila pretemna, preizkuseno
-           na napravi 29. 7. 2026. */
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            margin-top: 5px;
-            height: 20px;          /* prostor za ročico; brez tega bi se polje sesedlo */
-            background: transparent;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            height: 4px;
-            border-radius: 2px;
-            background: linear-gradient(to right,
-                        #3498db 0 var(--del, 0%),
-                        #c2c2c2 var(--del, 0%) 100%);
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            border: 1px solid #ccc;   /* enako debela kot obroba vnosnih polj */
-            margin-top: -6px;         /* (4 - 16) / 2: ročica na sredini proge */
-        }
-        /* Firefox zapolnjeni del riše sam, zato tam preliva ne potrebujemo */
-        input[type="range"]::-moz-range-track {
-            height: 4px;
-            border-radius: 2px;
-            background: #c2c2c2;
-        }
-        input[type="range"]::-moz-range-progress {
-            height: 4px;
-            border-radius: 2px;
-            background: #3498db;
-        }
-        input[type="range"]::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #fff;
-            border: 1px solid #ccc;
-        }
-
         /* Številska polja poravnamo desno */
         .num-field { text-align: right; }
 
@@ -347,7 +295,7 @@
 
         /* Vrstice so se dotikale: gumb "-" zgornje vrstice je stal tik nad gumbom
            spodnje. Med vrsticami so zato 4 px.
-           Velja samo za Honorarje in Stroske - v Davkih je med vrsticami ze drsnik.
+           Velja v vseh treh stolpcih z vrsticami - Honorarji, Davki, Stroski.
            Pri eni sami vrstici se ne sprozi: nima predhodnice. */
         .vrstice .cost-row + .cost-row { margin-top: 4px; }
 
@@ -396,10 +344,8 @@
         }
 
         /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
-           ne ukine. Zato ga dobi vsak element posebej. Drsniki ostanejo pri 'auto',
-           da se vlecenje rocice ne spremeni. */
+           ne ukine. Zato ga dobi vsak element posebej. */
         body * { touch-action: manipulation; }
-        input[type="range"] { touch-action: auto; }
 
         /* Gumba stolpca (ponastavi / razveljavi) stojita LEVO, v svojem bloku.
            Z napisom in zneski na desni nimata zveze: leva stran je nizja od desne
@@ -769,7 +715,6 @@
 
     <script>
         const MAX_TAX = 100;        // davek nad 100 % ni smiseln
-        const SLIDER_BASE_MAX = 30; // privzeti obseg drsnika (za natančno nastavljanje nizkih stopenj)
         const MAX_DISPLAY = 1e15;   // nad to mejo znesek ni več smiseln (in bi razbil prikaz)
 
         // Privzeta vsebina stolpcev (1g): ENA vrstica z imenom, znesek 0.
@@ -822,7 +767,7 @@
         const STOLPCI = [
             { vrsta: 'base',   naslov: null,               vsebnik: 'base-container-',  vrstice: true,
               napis: 'Skupaj osnova',  sestevek: '0,00 €', delez: '+0,00 %', osnova: 'Do 0,00 €' },
-            { vrsta: 'tax',    naslov: '2. Davki (%)',     vsebnik: 'taxes-container-', vrstice: false, samoNeobdavcen: true,
+            { vrsta: 'tax',    naslov: '2. Davki (%)',     vsebnik: 'taxes-container-', vrstice: true, samoNeobdavcen: true,
               napis: 'Skupaj davek',   sestevek: '0,00 %', delez: '0,00 €',  osnova: 'Od 0,00 €' },
             { vrsta: 'costs',  naslov: '3. Drugi stroški', vsebnik: 'costs-container-', vrstice: true,
               napis: 'Skupaj stroški', sestevek: '0,00 €', delez: '0,00 %',  osnova: 'Od 0,00 €' },
@@ -1254,34 +1199,17 @@
             refreshButtons(containerId, 'cost');
         }
 
-        // ---------- Davki (vsaka vrstica ima svoj drsnik) ----------
-        // Ločeno štetje po kalkulatorju, da so oznake polj predvidljive (taxNum1_0, taxNum1_1, ...)
-        const taxUidSeq = { 1: 0, 2: 0 };
-
+        // ---------- Davki ----------
         function appendTaxEntry(containerId, calcNum, name, val) {
             const container = document.getElementById(containerId);
-            const uid = taxUidSeq[calcNum]++;
-            const numId = `taxNum${calcNum}_${uid}`;
-            const rangeId = `taxRange${calcNum}_${uid}`;
-
             const row = document.createElement('div');
             row.className = 'cost-row';
             row.innerHTML = `
                 <input type="text" class="name-field" value="${escapeHtml(name)}">
-                <input type="text" inputmode="decimal" class="tax-val-${calcNum} num-field" id="${numId}" data-pair="${rangeId}" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
+                <input type="text" inputmode="decimal" class="tax-val-${calcNum} num-field" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
                 <button class="btn-action"></button>
             `;
             container.appendChild(row);
-
-            const range = document.createElement('input');
-            range.type = 'range';
-            range.id = rangeId;
-            range.min = '0';
-            range.step = '1';   // drsnik se premika po celih odstotkih
-            range.setAttribute('data-pair', numId);
-            container.appendChild(range);
-
-            syncSliderTo(document.getElementById(numId)); // nastavi obseg in vrednost drsnika
         }
 
         function addTaxRow(containerId) {
@@ -1290,14 +1218,11 @@
             calculateAll();
         }
 
-        // Vrstica davka in njen drsnik se vedno odstranita skupaj
         function removeTaxRow(btn) {
             const row = btn.parentElement;
             if (!row || !row.parentElement) return;
             const containerId = row.parentElement.id;
-            const slider = row.nextElementSibling;
             row.remove();
-            if (slider && slider.type === 'range') slider.remove();
             refreshButtons(containerId, 'tax');
             calculateAll();
         }
@@ -1305,7 +1230,6 @@
         function rebuildTaxes(containerId, calcNum, taxesArr) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            taxUidSeq[calcNum] = 0; // stolpec je prazen, štetje lahko začnemo znova
             taxesArr.forEach(tax => {
                 appendTaxEntry(containerId, calcNum, safeName(tax), safeVal(tax));
             });
@@ -1328,28 +1252,6 @@
         // zapisa sploh ni ali je pokvarjen.
         function rowsOr(arr, fallback) {
             return Array.isArray(arr) ? arr : fallback;
-        }
-
-        // Koliko proge je zapolnjene. Safari zapolnjenega dela ne riše sam,
-        // ko mu progo prebarvamo, zato mu mejo povemo tu.
-        function osveziProgo(slider) {
-            if (!slider || !slider.style) return;
-            const max = parseNum(slider.max) || 1;
-            const del = clamp(parseNum(slider.value) / max, 0, 1) * 100;
-            slider.style.setProperty('--del', del + '%');
-        }
-
-        // Drsnik sledi številki; obseg se po potrebi razširi nad privzetih 30 %
-        function syncSliderTo(numEl) {
-            if (!numEl || !numEl.getAttribute) return;
-            const pairId = numEl.getAttribute('data-pair');
-            if (!pairId) return;
-            const slider = document.getElementById(pairId);
-            if (!slider) return;
-            const v = clamp(vrednostPolja(numEl), 0, MAX_TAX);
-            slider.max = String(Math.max(SLIDER_BASE_MAX, Math.ceil(v)));
-            slider.value = String(Math.round(v));   // ročica stoji na celem odstotku
-            osveziProgo(slider);
         }
 
         // ---------- Shranjevanje ----------
@@ -1666,8 +1568,6 @@
         }
 
         // Postavi vsebino stolpca in poskrbi za vse, kar je od nje odvisno.
-        // Pri davkih drsnik postavi appendTaxEntry sam: ob vrednosti 0 se obseg
-        // skrci nazaj na privzetih 30 %.
         function postaviStolpec(vrsta, n, vsebina) {
             if (vrsta === 'base') rebuildBases('base-container-' + n, n, vsebina);
             else if (vrsta === 'costs') rebuildCosts('costs-container-' + n, n, vsebina);
@@ -2043,16 +1943,6 @@
                     t.setAttribute(ATRIBUT_VREDNOST, String(parseNum(t.value)));
                 }
             }
-            if (t && t.getAttribute) {
-                const pairId = t.getAttribute('data-pair');
-                if (pairId) {
-                    const pairEl = document.getElementById(pairId);
-                    if (pairEl) {
-                        if (pairEl.type === 'range') syncSliderTo(t);       // številka -> drsnik
-                        else { vpisiSurovo(pairEl, t.value); osveziProgo(t); }   // drsnik -> številka
-                    }
-                }
-            }
             calculateAll();
         });
 
@@ -2069,7 +1959,6 @@
                 const raw = vrednostPolja(t);
                 const p = clamp(raw, 0, MAX_TAX);
                 if (p !== raw) { vpisiSurovo(t, String(p)); changed = true; }
-                syncSliderTo(t);
             } else if (cls.indexOf('nonneg') !== -1) {
                 if (vrednostPolja(t) < 0) { vpisiSurovo(t, '0'); changed = true; }
             }
