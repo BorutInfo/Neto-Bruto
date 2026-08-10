@@ -2092,6 +2092,7 @@
                 t.classList.add(RAZRED_PRIPRAVLJENO);
                 pravkarFokusirano = t;
                 oznaciZadnje(t);
+                zapomniLego();
             }
         });
 
@@ -2162,6 +2163,74 @@
         oblikujVsaPolja();
         naloziPogled();
         calculateAll();
+        // ---------- Vrnitev strani po zaprtju tipkovnice ----------
+        // Po zaprtju tipkovnice Safari strani ne vrne tja, kjer je bila - ostane
+        // blizu polja, v katero se je tipkalo (izmerjeno 9. 8. 2026: 1248 -> 1435).
+        // Zato si lego zapomnimo sami in jo vrnemo.
+        //
+        // Uhojena pot, ki jo za iPhone uporablja vecina: kdaj se oglasiti pove
+        // visualViewport (koliko prostora ostane na zaslonu), kaj narediti pa je
+        // znana praksa "scroll restoration" - zapomni stevilko, vrni stevilko.
+        // Neposredne naprave za tipkovnico (VirtualKeyboard API) Safari nima.
+        //
+        // V kodi ni nobene vpisane stevilke: polno visino zaslona in lego strani
+        // si naprava izmeri sama. Ure ni nikjer - testno okolje je ne pozna.
+        //
+        // Borutove odlocitve 9. in 10. 8. 2026:
+        //  - vrnemo se na lego izpred dotika ZADNJEGA polja;
+        //  - ce med odprto tipkovnico s prstom odpeljete drugam, vrnitve ni;
+        //  - ce podrsate SELE po kljukici, obvelja kljukica in vrnitev stece;
+        //  - vrnitev je animirana, z brskalnikovim lastnim gladkim drsenjem.
+        const OKNO = (typeof window !== 'undefined' && window.visualViewport)
+            ? window.visualViewport : null;
+
+        let legaPredVstopom = null;    // kako dalec je bila stran zdrsnjena pred vstopom
+        let visinaBrezTipkovnice = null; // koliko prostora je, ko tipkovnice ni (izmerjeno)
+        let prostorSeJeSkrcil = false; // smo tipkovnico sploh videli?
+
+        function zapomniLego() {
+            if (!OKNO) return;
+            // Ob vsakem vstopu v polje: vrnemo se na lego izpred ZADNJEGA polja.
+            legaPredVstopom = window.pageYOffset;
+            // Polno visino izmerimo le, kadar tipkovnice se ni bilo - sicer bi si
+            // ob prehodu na naslednje polje zapomnili visino s tipkovnico vred.
+            if (!prostorSeJeSkrcil) visinaBrezTipkovnice = OKNO.height;
+        }
+
+        function pozabiLego() {
+            legaPredVstopom = null;
+            prostorSeJeSkrcil = false;
+        }
+
+        function vrniLego() {
+            const cilj = legaPredVstopom;
+            pozabiLego();
+            if (cilj === null) return;
+            // Gladko drsenje je brskalnikovo; kjer ga ni, skocimo naenkrat.
+            if ('scrollBehavior' in document.documentElement.style) {
+                window.scrollTo({ top: cilj, behavior: 'smooth' });
+            } else {
+                window.scrollTo(cilj, cilj);
+            }
+        }
+
+        if (OKNO) {
+            // Prostor na zaslonu je posreden znak: tipkovnica ga vzame, vrstica z
+            // naslovom strani pa tudi. Zato se odzovemo samo, ce smo krcenje res
+            // videli, in sele ko je prostora spet toliko kot pred vstopom v polje.
+            OKNO.addEventListener('resize', function () {
+                if (legaPredVstopom === null) return;
+                if (OKNO.height < visinaBrezTipkovnice) { prostorSeJeSkrcil = true; return; }
+                if (prostorSeJeSkrcil) vrniLego();
+            });
+
+            // Prst po strani med ODPRTO tipkovnico = vas namerni premik in ta
+            // obvelja. Po kljukici tega ne velja vec - takrat je krcenje ze mimo.
+            document.addEventListener('touchmove', function () {
+                if (prostorSeJeSkrcil) pozabiLego();
+            }, { passive: true });
+        }
+
     </script>
 </body>
 </html>
