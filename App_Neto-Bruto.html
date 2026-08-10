@@ -269,6 +269,12 @@
             outline: none;
         }
 
+        /* Zadnje polje, v katerem ste bili, obdrzi obrobo tudi potem, ko ga
+           zapustite - da se po zaprtju tipkovnice vidi, kje ste nazadnje pisali.
+           Ista barva kot pri :focus. Pravilo mora stati ZA osnovnim pravilom za
+           vnosna polja: oba imata enako tezo, zato odloci vrstni red. */
+        input.zadnje { border-color: #3498db; }
+
         /* ---------- Drsniki pri davkih ----------
            Neaktivna proga je bila prebleda. Ko pa progi prevzamemo videz,
            Safari PRENEHA sam risati zapolnjeni del in zamenjave zanj v CSS ni.
@@ -1604,6 +1610,31 @@
             t.value = novo.substring(konec - dodano, konec);
         }
 
+        // ---------- Zadnje polje ----------
+        // Polje, v katerem ste bili nazadnje, obdrzi obrobo tudi potem, ko ga
+        // zapustite. Obrobljeno je vedno eno samo. Oznake nikamor ne shranimo,
+        // zato je ob ponovnem odprtju strani ni.
+        //
+        // Ob "+" in "-" oznaka ostane sama od sebe: addBaseRow doda eno vrstico,
+        // removeBaseRow odstrani eno vrstico, drugih se ne dotakneta. Ce izbrisete
+        // prav vrstico z oznako, gre oznaka z njo - polja ni vec.
+        const RAZRED_ZADNJE = 'zadnje';
+        let poljeZadnje = null;
+
+        function oznaciZadnje(el) {
+            if (poljeZadnje && poljeZadnje !== el && poljeZadnje.classList) {
+                poljeZadnje.classList.remove(RAZRED_ZADNJE);
+            }
+            poljeZadnje = (el && el.classList) ? el : null;
+            if (poljeZadnje) poljeZadnje.classList.add(RAZRED_ZADNJE);
+        }
+
+        function pozabiZadnje(el) {
+            if (!el || !el.classList) return;
+            el.classList.remove(RAZRED_ZADNJE);
+            if (poljeZadnje === el) poljeZadnje = null;
+        }
+
         // ---------- Ponastavitev stolpca in razveljavitev ----------
         // Za vsak stolpec hranimo zadnje stanje pred ponastavitvijo. Zapis zivi le,
         // dokler je stran odprta; osvezitev strani ga izbrise.
@@ -1641,7 +1672,12 @@
             if (vrsta === 'base') rebuildBases('base-container-' + n, n, vsebina);
             else if (vrsta === 'costs') rebuildCosts('costs-container-' + n, n, vsebina);
             else if (vrsta === 'tax') rebuildTaxes('taxes-container-' + n, n, vsebina);
-            else TRAVEL_FIELDS.forEach((f, i) => setVal(f + n, vsebina[i]));
+            // Pri vrsticah polja izginejo z izrisom in oznaka gre z njimi. Polja
+            // poti pa ostanejo ista, zato jim jo je treba odvzeti izrecno.
+            else TRAVEL_FIELDS.forEach((f, i) => {
+                setVal(f + n, vsebina[i]);
+                pozabiZadnje(document.getElementById(f + n));
+            });
             oblikujVsaPolja();
             calculateAll();
             saveToStorage();
@@ -2055,6 +2091,7 @@
                 vrednostObVstopu = String(t.value);
                 t.classList.add(RAZRED_PRIPRAVLJENO);
                 pravkarFokusirano = t;
+                oznaciZadnje(t);
             }
         });
 
