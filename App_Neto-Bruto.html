@@ -249,6 +249,17 @@
             align-items: center;
             gap: 12px 8px;   /* 12 px med vrsticami (enako kot .col), 8 px med napisom in poljem */
         }
+        /* KORAK 1j: samo pri km stoji poleg polja gumb za pavziranje. Zato je
+           gumb v svojem paru s poljem in ne v mrezi - drugi trije napisi in polja
+           s tem ne izgubijo nic sirine. */
+        .pot-vnos {
+            display: flex;
+            gap: 5px;
+            align-items: stretch;
+            min-width: 0;
+        }
+        .pot-vnos .num-field { flex: 1; min-width: 0; width: auto; }
+
         .pot-polja label {
             text-align: left;
             margin-bottom: 0;   /* -5px je stiskal napis k polju SPODAJ; v vrstici je odvec */
@@ -297,7 +308,70 @@
            spodnje. Med vrsticami so zato 4 px.
            Velja v vseh treh stolpcih z vrsticami - Honorarji, Davki, Stroski.
            Pri eni sami vrstici se ne sprozi: nima predhodnice. */
-        .vrstice .cost-row + .cost-row { margin-top: 4px; }
+        .vrstice .tir + .tir { margin-top: 4px; }
+
+        /* KORAK 1j: DRSNI TIR.
+           Vrstica in gumb Izbrisi stojita v dveh stolpcih drug ob drugem. Tir je
+           sirok kot prvi stolpec, zato je viden vedno le eden. Poteg v levo pripelje
+           gumb na plan.
+           Drsenje, ustavljanje in vracanje opravi BRSKALNIK. Nasa koda razdalje ne
+           steje in prsta ne lovi - to je bilo izmerjeno 11. 8. 2026 na napravi:
+           lovljenje prsta je skakalo, brskalnikovo drsenje je bilo gladko.
+           Zaprta lega je 0. Zato je vsaka vrnitev na zacetek - tudi tista, ki jo
+           Safari naredi sam ob odprtju tipkovnice - vrnitev v ZAPRTO stanje. */
+        .tir {
+            display: grid;
+            grid-template-columns: 100% 80px;
+            overflow-x: scroll;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+        /* Drsni trak skrijemo: gib sam je znak, da se vrstica premika. */
+        .tir::-webkit-scrollbar { display: none; }
+
+        /* Obe legi morata biti postajalisci, sicer se tir ustavi na pol poti. */
+        .tir > .cost-row { scroll-snap-align: start; }
+        .tir > .izbrisi  { scroll-snap-align: end; }
+
+        /* 80 px je Borutova izbira (11. 8. 2026). Beseda meri pri 16 px pisave
+           priblizno 49 px, zato ostane po 15 px zraka na vsaki strani. */
+        .izbrisi {
+            border: none;
+            border-radius: 4px;
+            background-color: #e74c3c;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Meni desnega klika (Mac). Postavi se na mesto klika in se z zamikom
+           potisne v LEVO od njega - gumb stoji na skrajni desni, zato bi meni
+           desno od njega zletel z zaslona. Zamik opravi slog, zato sirine meniju
+           ni treba meriti. */
+        .meni-desni {
+            position: fixed;
+            z-index: 50;
+            transform: translateX(-100%);
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            padding: 4px;
+        }
+        .meni-izbrisi {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 16px;
+            text-align: left;
+            white-space: nowrap;
+            background: none;
+            border: none;
+            border-radius: 4px;
+            color: #c0392b;
+            cursor: pointer;
+        }
 
         /* 1g: gumb "+" ni vec v vrstici, ampak stoji sam pod njimi. Desno, v isti
            navpicnici kot gumbi "-" nad njim - zato flex-end in nic zamika desno.
@@ -333,14 +407,61 @@
             flex-shrink: 0;
         }
         .btn-add { background-color: #2ecc71; }
-        .btn-remove { background-color: #e74c3c; }
+
+        /* KORAK 1j: gumb za PAVZIRANJE stoji tam, kjer je stal rdec "-", in je
+           enako sirok (32 px). Vrstica zato ne izgubi in ne pridobi prostora.
+           Barva je barva kosa - v drugi vrstici sklopa je kos druge barve, zato
+           je tudi ta gumb. Siva kosa je bila zavrnjena: tam pomeni "ni kaj
+           narediti", tu bi pomenila nekaj drugega. */
+        .btn-pavza { background-color: #dfc08a; }
+        .row-second .btn-pavza { background-color: #9ccec4; }
+
+        /* Pavziran gumb: barva ozadja in okvir aktivne barve, 2 px NAVZNOTER.
+           Okvir je senca navznoter, ne obroba - obroba bi gumb razsirila za 4 px
+           in vrstica bi se premaknila. */
+        .btn-pavza.pavzirano {
+            background-color: #f8f9fa;
+            box-shadow: inset 0 0 0 2px #dfc08a;
+            color: #dfc08a;
+        }
+        .row-second .btn-pavza.pavzirano {
+            box-shadow: inset 0 0 0 2px #9ccec4;
+            color: #9ccec4;
+        }
+
+        /* Prazen krog je NARISAN, ne zapisan z znakom - isti nauk kot pri kosu in
+           kljukici iz koraka 1f: pisava redke znake zamenja in testi tega ne
+           ujamejo. Velikost je DELEZ pisave, zato raste in se manjsa skupaj z njo
+           (koraka 10 in 11). */
+        .krog {
+            display: block;
+            width: 0.75em;
+            height: 0.75em;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+        }
+
+        /* Pavzirano polje je ZAKLENJENO: vanj ni mogoce pisati, zneska ni mogoce
+           ne oznaciti ne prekopirati (Borut, 11. 8. 2026). Sivina #d9d9d9 je
+           izracunana: obroba polja #ccc plus 25 % proti belemu.
+           Barvo crk zapisemo SAMI: brskalnik zaklenjenim poljem crke pobledi po
+           svoje in zneska se komaj vidi. */
+        .cost-row.pavzirano input,
+        .pot-polja.pavzirano input {
+            background-color: #d9d9d9;
+            color: #333;
+            -webkit-text-fill-color: #333;
+            opacity: 1;
+            cursor: default;
+        }
         /* Temnejsa barva velja samo tam, kjer miska res obstaja. Na telefonu je
            stanje "miska je nad gumbom" obviselo na zadnjem pritisnjenem gumbu,
            dokler se nisi dotaknil drugam (Borut, 5. 8. 2026). Kratek blisk ob
            dotiku ni nas - rise ga telefon sam in ostane. */
         @media (hover: hover) {
             .btn-add:hover { background-color: #27ae60; }
-            .btn-remove:hover { background-color: #c0392b; }
+            .izbrisi:hover { background-color: #c0392b; }
+            .meni-izbrisi:hover { background-color: #f4f4f4; }
         }
 
         /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
@@ -785,10 +906,18 @@
         ];
 
         function potPolja(n) {
-            return POT_VRSTICE.map(v =>
-                '<label' + (v.opis ? ' title="' + v.opis + '"' : '') + '>' + v.napis + '</label>' +
-                '<input type="text" inputmode="decimal" class="num-field nonneg" id="' + v.polje + n + '" value="0">'
-            ).join('');
+            return POT_VRSTICE.map(v => {
+                const polje = '<input type="text" inputmode="decimal" class="num-field nonneg" id="' + v.polje + n + '" value="0">';
+                // Gumb za pavziranje stoji SAMO pri km in ugasne cel izracun poti
+                // (Borut, 11. 8. 2026). Oznaka 'brez-izbrisa' pove, da te vrstice
+                // ni mogoce izbrisati: desni klik nanj ne odpre menija.
+                const jedro = (v.polje === 'km')
+                    ? '<div class="pot-vnos">' + polje +
+                      '<button type="button" class="btn-action btn-pavza brez-izbrisa" title="Pavziraj izračun poti" aria-label="Pavziraj izračun poti">' +
+                      '<span class="krog" aria-hidden="true"></span></button></div>'
+                    : polje;
+                return '<label' + (v.opis ? ' title="' + v.opis + '"' : '') + '>' + v.napis + '</label>' + jedro;
+            }).join('');
         }
 
         // Vrstice v stolpcih (honorarji, davki, stroški) tu ne nastanejo - te riše
@@ -1073,18 +1202,126 @@
         // verige pogojev: nova vrsta se doda na enem mestu. Funkcije so deklarirane
         // nize v datoteki, kar je v redu - deklaracije veljajo v celotnem sklopu.
         const VRSTICE = {
-            base: { add: addBaseRow, remove: removeBaseRow },
-            tax:  { add: addTaxRow,  remove: removeTaxRow },
-            cost: { add: addCostRow, remove: removeCostRow }
+            base: { add: addBaseRow },
+            tax:  { add: addTaxRow },
+            cost: { add: addCostRow }
         };
 
-        // Vsaka vrstica ima rdeci "-". Izjeme ni vec: pravilo "zadnja vrstica je
-        // drugacna" je s korakom 1g odpadlo.
+        // Vsebnik vrstice poiscemo tako, da se od nje vzpenjamo, dokler ne najdemo
+        // elementa z oznako. Vrstica danes stoji neposredno v vsebniku, po posegu 3
+        // pa bo med njima se drsni tir - pravilo velja v obeh primerih.
+        function vsebnikVrstice(row) {
+            let el = row ? row.parentElement : null;
+            while (el && !el.getAttribute('id')) el = el.parentElement;
+            return el;
+        }
+
+        // KORAK 1j, poseg 1: ena sama funkcija namesto treh. Doslej so bile tri
+        // (removeBaseRow, removeCostRow, removeTaxRow) in so se razlikovale v eni
+        // sami besedi - 'base', 'cost' ali 'tax'. Sedem vrstic od devetih je bilo
+        // enakih znak za znakom.
+        function odstraniVrstico(btn, vrsta) {
+            // Gumb "-" stoji ZNOTRAJ vrstice, gumb Izbrisi pa poleg nje v istem
+            // tiru. Zato vrstico iscemo z obeh strani.
+            const tir = najdiStarsa(btn, 'tir');
+            const row = najdiStarsa(btn, 'cost-row') || (tir ? tir.querySelector('.cost-row') : null);
+            if (!row) return;
+            const vsebnik = vsebnikVrstice(row);
+            if (!vsebnik) return;
+            // KORAK 1j, poseg 2: izbris vrstice se odslej DA razveljaviti. Posnetek
+            // stolpca nastane PRED izbrisom, po istem pravilu kot pri kosu: prvi
+            // posnetek obvelja, drugi ga ne povozi. Sicer bi razveljavitev po dveh
+            // izbrisih vrnila ze okrnjen stolpec namesto izhodiscnega.
+            const col = najdiStarsa(row, 'col');
+            const kljuc = kljucStolpca(col);
+            if (kljuc && !POMNIK[kljuc]) {
+                const vr = vrstaStolpca(kljuc);
+                const n = stevilkaStolpca(kljuc);
+                if (vr && n) POMNIK[kljuc] = posnemiStolpec(vr, n);
+            }
+            // Odstranimo CEL tir. Ce bi odstranili samo vrstico, bi za njo ostal
+            // prazen tir z gumbom Izbrisi.
+            (tir || row).remove();
+            if (odprtiTir === tir) odprtiTir = null;
+            refreshButtons(vsebnik.getAttribute('id'), vrsta);
+            osveziRazveljavitev(col);
+            calculateAll();
+        }
+
+        // Vrstica je pavzirana, kadar nosi ta razred. Vse ostalo - sivina polj,
+        // zaklep, videz gumba in izpad iz sestevka - je posledica te ene oznake.
+        function jePavzirano(el) {
+            return najdiStarsa(el, 'pavzirano') !== null;
+        }
+
+        // Pavzo postavimo na en sam element (vrstico ali blok polj poti). Polja
+        // dobijo zaklep kot ATRIBUT, da je stanje vidno tudi v drevesu strani.
+        function nastaviPavzo(el, pav) {
+            if (!el || !el.classList) return;
+            if (pav) el.classList.add('pavzirano');
+            else el.classList.remove('pavzirano');
+            el.querySelectorAll('input').forEach(polje => {
+                if (pav) polje.setAttribute('disabled', 'disabled');
+                else polje.removeAttribute('disabled');
+            });
+        }
+
+        // KORAK 1j: vsaka vrstica ima gumb za PAVZIRANJE. Rdeci "-" je odpadel -
+        // vrstica se odslej brise s potegom v levo (telefon in sledilna ploscica)
+        // ali z desnim klikom na ta gumb (Mac).
         function setRowButton(btn, kind) {
-            btn.className = 'btn-action btn-remove';
-            btn.innerText = '-';
-            btn.title = 'Odstrani vrstico';
-            btn.onclick = function () { VRSTICE[kind].remove(btn); };
+            const pav = jePavzirano(btn.parentElement);
+            btn.className = 'btn-action btn-pavza' + (pav ? ' pavzirano' : '');
+            btn.innerHTML = '<span class="krog" aria-hidden="true"></span>';
+            btn.title = pav ? 'Odpavziraj znesek' : 'Pavziraj znesek';
+            btn.setAttribute('aria-label', btn.title);
+            // Vrsto zapisemo na gumb: meni desnega klika je od gumba locen element
+            // in po zaprtju menija drugega vira teh podatkov ni.
+            btn.setAttribute('data-vrsta', kind);
+            btn.onclick = function () { preklopiPavzo(btn); };
+        }
+
+        // Pavza celega stolpca Pot. Posivijo VSA STIRI polja, ker ugasne cel
+        // izracun, ne en sam sestevanec.
+        function nastaviPavzoPoti(n, pav) {
+            const blok = najdiStarsa(document.getElementById('km' + n), 'pot-polja');
+            if (!blok) return;
+            nastaviPavzo(blok, pav);
+            const btn = blok.querySelector('.btn-pavza');
+            if (!btn) return;
+            if (btn.classList) {
+                if (pav) btn.classList.add('pavzirano');
+                else btn.classList.remove('pavzirano');
+            }
+            btn.title = pav ? 'Odpavziraj izračun poti' : 'Pavziraj izračun poti';
+            btn.setAttribute('aria-label', btn.title);
+        }
+
+        function jePavzaPoti(n) {
+            const blok = najdiStarsa(document.getElementById('km' + n), 'pot-polja');
+            return imaRazred(blok, 'pavzirano') ? 1 : 0;
+        }
+
+        function preklopiPavzoPoti(btn) {
+            const blok = najdiStarsa(btn, 'pot-polja');
+            const polje = blok ? blok.querySelector('.num-field') : null;
+            const oznaka = polje ? String(polje.getAttribute('id')) : '';
+            const n = oznaka.replace(/^km/, '');
+            if (!n) return;
+            nastaviPavzoPoti(n, !imaRazred(blok, 'pavzirano'));
+            calculateAll();
+            osveziKose(btn);
+        }
+
+        // Pavziran znesek ostane viden, a se ne sesteva. Za popravek je treba
+        // vrstico najprej odpavzirati.
+        function preklopiPavzo(btn) {
+            const row = najdiStarsa(btn, 'cost-row');
+            if (!row) return;
+            nastaviPavzo(row, !imaRazred(row, 'pavzirano'));
+            setRowButton(btn, btn.getAttribute('data-vrsta'));
+            calculateAll();
+            osveziKose(row);
         }
 
         // Gumb "+" je zadnji otrok vsebnika. Ce ga se ni, ga naredimo; sicer ga
@@ -1114,6 +1351,13 @@
             container.querySelectorAll('.cost-row').forEach(row => {
                 const btn = row.querySelector('button');
                 if (btn) setRowButton(btn, kind);
+                // Gumb Izbrisi stoji ZUNAJ vrstice, v istem tiru.
+                const tir = row.parentElement;
+                const izb = tir ? tir.querySelector('.izbrisi') : null;
+                if (izb) {
+                    izb.setAttribute('aria-label', 'Izbriši vrstico');
+                    izb.onclick = function () { odstraniVrstico(izb, kind); };
+                }
             });
             zagotoviGumbDodaj(container, kind, containerId);
             // Dodana ali odstranjena vrstica je sprememba stolpca: kos se odloci znova.
@@ -1126,15 +1370,18 @@
         // Ime (npr. delodajalec) vpiše uporabnik in na izračun ne vpliva.
         // Rezultat je enak kot pri enem samem znesku: davek je množenje, zato je
         // vseeno, ali seštejemo pred obračunom ali po njem (800 + 400 = 1200).
-        function makeBaseRow(name, val, calcNum) {
-            const row = document.createElement('div');
-            row.className = 'cost-row';
-            row.innerHTML = `
-                <input type="text" class="name-field" value="${escapeHtml(name)}">
-                <input type="text" inputmode="decimal" class="base-val-${calcNum} num-field nonneg" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
-                <button class="btn-action"></button>
+        function makeBaseRow(name, val, calcNum, pav) {
+            const tir = document.createElement('div');
+            tir.className = 'tir';
+            tir.innerHTML = `
+                <div class="cost-row${pav ? ' pavzirano' : ''}">
+                    <input type="text" class="name-field" value="${escapeHtml(name)}"${pav ? ' disabled' : ''}>
+                    <input type="text" inputmode="decimal" class="base-val-${calcNum} num-field nonneg" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}"${pav ? ' disabled' : ''}>
+                    <button class="btn-action"></button>
+                </div>
+                <button type="button" class="izbrisi">Izbriši</button>
             `;
-            return row;
+            return tir;
         }
 
         function addBaseRow(containerId) {
@@ -1144,34 +1391,28 @@
             calculateAll();
         }
 
-        function removeBaseRow(btn) {
-            const row = btn.parentElement;
-            if (!row || !row.parentElement) return;
-            const containerId = row.parentElement.id;
-            row.remove();
-            refreshButtons(containerId, 'base');
-            calculateAll();
-        }
-
         function rebuildBases(containerId, calcNum, basesArr) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             basesArr.forEach(item => {
-                container.appendChild(makeBaseRow(safeName(item), safeVal(item), calcNum));
+                container.appendChild(makeBaseRow(safeName(item), safeVal(item), calcNum, safePav(item)));
             });
             refreshButtons(containerId, 'base');
         }
 
         // ---------- Stroški ----------
-        function makeCostRow(name, val, calcNum) {
-            const row = document.createElement('div');
-            row.className = 'cost-row';
-            row.innerHTML = `
-                <input type="text" class="name-field" value="${escapeHtml(name)}">
-                <input type="text" inputmode="decimal" class="cost-val-${calcNum} num-field nonneg" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
-                <button class="btn-action"></button>
+        function makeCostRow(name, val, calcNum, pav) {
+            const tir = document.createElement('div');
+            tir.className = 'tir';
+            tir.innerHTML = `
+                <div class="cost-row${pav ? ' pavzirano' : ''}">
+                    <input type="text" class="name-field" value="${escapeHtml(name)}"${pav ? ' disabled' : ''}>
+                    <input type="text" inputmode="decimal" class="cost-val-${calcNum} num-field nonneg" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}"${pav ? ' disabled' : ''}>
+                    <button class="btn-action"></button>
+                </div>
+                <button type="button" class="izbrisi">Izbriši</button>
             `;
-            return row;
+            return tir;
         }
 
         function addCostRow(containerId) {
@@ -1181,35 +1422,29 @@
             calculateAll();
         }
 
-        function removeCostRow(btn) {
-            const row = btn.parentElement;
-            if (!row || !row.parentElement) return;
-            const containerId = row.parentElement.id;
-            row.remove();
-            refreshButtons(containerId, 'cost');
-            calculateAll();
-        }
-
         function rebuildCosts(containerId, calcNum, costsArr) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             costsArr.forEach(cost => {
-                container.appendChild(makeCostRow(safeName(cost), safeVal(cost), calcNum));
+                container.appendChild(makeCostRow(safeName(cost), safeVal(cost), calcNum, safePav(cost)));
             });
             refreshButtons(containerId, 'cost');
         }
 
         // ---------- Davki ----------
-        function appendTaxEntry(containerId, calcNum, name, val) {
+        function appendTaxEntry(containerId, calcNum, name, val, pav) {
             const container = document.getElementById(containerId);
-            const row = document.createElement('div');
-            row.className = 'cost-row';
-            row.innerHTML = `
-                <input type="text" class="name-field" value="${escapeHtml(name)}">
-                <input type="text" inputmode="decimal" class="tax-val-${calcNum} num-field" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}">
-                <button class="btn-action"></button>
+            const tir = document.createElement('div');
+            tir.className = 'tir';
+            tir.innerHTML = `
+                <div class="cost-row${pav ? ' pavzirano' : ''}">
+                    <input type="text" class="name-field" value="${escapeHtml(name)}"${pav ? ' disabled' : ''}>
+                    <input type="text" inputmode="decimal" class="tax-val-${calcNum} num-field" value="${escapeHtml(val)}" data-num="${escapeHtml(String(parseNum(val)))}"${pav ? ' disabled' : ''}>
+                    <button class="btn-action"></button>
+                </div>
+                <button type="button" class="izbrisi">Izbriši</button>
             `;
-            container.appendChild(row);
+            container.appendChild(tir);
         }
 
         function addTaxRow(containerId) {
@@ -1218,20 +1453,11 @@
             calculateAll();
         }
 
-        function removeTaxRow(btn) {
-            const row = btn.parentElement;
-            if (!row || !row.parentElement) return;
-            const containerId = row.parentElement.id;
-            row.remove();
-            refreshButtons(containerId, 'tax');
-            calculateAll();
-        }
-
         function rebuildTaxes(containerId, calcNum, taxesArr) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             taxesArr.forEach(tax => {
-                appendTaxEntry(containerId, calcNum, safeName(tax), safeVal(tax));
+                appendTaxEntry(containerId, calcNum, safeName(tax), safeVal(tax), safePav(tax));
             });
             refreshButtons(containerId, 'tax');
         }
@@ -1245,6 +1471,12 @@
             if (!item || typeof item !== 'object') return 0;
             const t = typeof item.val;
             return (t === 'string' || t === 'number') ? item.val : 0;
+        }
+        // Zapis brez pavze je STAREJSI od koraka 1j. Manjkajoca pavza pomeni
+        // "ni pavzirano" - zato starega zapisa ni treba zavreci in vasi zneski
+        // ostanejo. To je razlika od pogled-2, kjer se star zapis prezre.
+        function safePav(item) {
+            return !!(item && typeof item === 'object' && item.pav);
         }
         // Prazen seznam NI isto kot manjkajoc. Od koraka 1g sme stolpec ostati brez
         // vrstic; ce bi prazen seznam pomenil "uporabi privzeto", bi se izbrisane
@@ -1261,7 +1493,9 @@
                 const nameEl = row.querySelector('.name-field');
                 const numEl = row.querySelector('.' + numClass);
                 if (!nameEl || !numEl) return;
-                out.push({ name: nameEl.value, val: strojniZapis(numEl) });
+                const zapis = { name: nameEl.value, val: strojniZapis(numEl) };
+                if (imaRazred(row, 'pavzirano')) zapis.pav = 1;
+                out.push(zapis);
             });
             return out;
         }
@@ -1278,6 +1512,7 @@
             CALCS.forEach(c => {
                 data['bases' + c.n] = collectRows(`#base-container-${c.n} .cost-row`, 'base-val-' + c.n);
                 TRAVEL_FIELDS.forEach(f => { data[f + c.n] = rawVal(f + c.n); });
+                data['potPav' + c.n] = jePavzaPoti(c.n);
                 data['costs' + c.n] = collectRows(`#costs-container-${c.n} .cost-row`, 'cost-val-' + c.n);
                 if (!c.taxed) {
                     data['taxes' + c.n] = collectRows(`#taxes-container-${c.n} .cost-row`, 'tax-val-' + c.n);
@@ -1325,6 +1560,7 @@
                 rebuildBases('base-container-' + c.n, c.n, rowsOr(data['bases' + c.n], legacyBases));
 
                 TRAVEL_FIELDS.forEach(f => setVal(f + c.n, data[f + c.n]));
+                nastaviPavzoPoti(c.n, !!data['potPav' + c.n]);
 
                 rebuildCosts('costs-container-' + c.n, c.n, rowsOr(data['costs' + c.n], DEFAULT_COSTS));
 
@@ -1345,6 +1581,7 @@
         function taxFactor(calcNum) {
             let factor = 1;
             document.querySelectorAll('.tax-val-' + calcNum).forEach(el => {
+                if (jePavzirano(el)) return;   // pavziran davek ne obracuna nicesar
                 const p = clamp(vrednostPolja(el), 0, MAX_TAX);
                 factor *= (1 - p / 100);
             });
@@ -1354,18 +1591,28 @@
         // Osnova je lahko samo 0 ali več (negativen honorar ni dovoljen)
         function sumBases(calcNum) {
             let sum = 0;
-            document.querySelectorAll('.base-val-' + calcNum).forEach(el => { sum += Math.max(0, vrednostPolja(el)); });
+            document.querySelectorAll('.base-val-' + calcNum).forEach(el => {
+                if (jePavzirano(el)) return;
+                sum += Math.max(0, vrednostPolja(el));
+            });
             return sum;
         }
 
         // Stroški so lahko samo 0 ali več (negativen strošek ni dovoljen)
         function sumCosts(calcNum) {
             let sum = 0;
-            document.querySelectorAll('.cost-val-' + calcNum).forEach(el => { sum += Math.max(0, vrednostPolja(el)); });
+            document.querySelectorAll('.cost-val-' + calcNum).forEach(el => {
+                if (jePavzirano(el)) return;
+                sum += Math.max(0, vrednostPolja(el));
+            });
             return sum;
         }
 
         function travelCost(calcNum) {
+            // Pri poti pavza ne odsteje enega zneska, ampak ugasne CEL izracun:
+            // km, poraba, cena in amortizacija se med sabo mnozijo, zato tu ni
+            // sestevanca, ki bi ga bilo mogoce izpustiti (Borut, 11. 8. 2026).
+            if (jePavzirano(document.getElementById('km' + calcNum))) return 0;
             const km = getNonNeg('km' + calcNum);
             return (km / 100) * ((getNonNeg('poraba' + calcNum) * getNonNeg('gorivo' + calcNum)) + getNonNeg('amort' + calcNum));
         }
@@ -1517,8 +1764,8 @@
         // zapustite. Obrobljeno je vedno eno samo. Oznake nikamor ne shranimo,
         // zato je ob ponovnem odprtju strani ni.
         //
-        // Ob "+" in "-" oznaka ostane sama od sebe: addBaseRow doda eno vrstico,
-        // removeBaseRow odstrani eno vrstico, drugih se ne dotakneta. Ce izbrisete
+        // Ob dodajanju in brisanju oznaka ostane sama od sebe: addBaseRow doda eno
+        // vrstico, odstraniVrstico odstrani eno, drugih se ne dotakneta. Ce izbrisete
         // prav vrstico z oznako, gre oznaka z njo - polja ni vec.
         const RAZRED_ZADNJE = 'zadnje';
         let poljeZadnje = null;
@@ -1544,7 +1791,9 @@
         const POMNIK_DELA = {};
         const VPRASANJE = 'Podatki v stolpcu bodo izbrisani.';
         const VPRASANJE_DEL = 'Podatki VSEH stolpcev bodo izbrisani.';
-        const PRIVZETA_POT = ['0', '0', '0', '0'];
+        // Peta postavka je pavza (1 ali 0). Stiri polja + pavza: tako jo zajameta
+        // tudi kos in razveljavitev, brez posebnega pravila zanju.
+        const PRIVZETA_POT = ['0', '0', '0', '0', 0];
 
         function vrstaStolpca(kljuc) {
             if (!kljuc) return null;
@@ -1564,7 +1813,7 @@
             if (vrsta === 'base') return collectRows('#base-container-' + n + ' .cost-row', 'base-val-' + n);
             if (vrsta === 'costs') return collectRows('#costs-container-' + n + ' .cost-row', 'cost-val-' + n);
             if (vrsta === 'tax') return collectRows('#taxes-container-' + n + ' .cost-row', 'tax-val-' + n);
-            return TRAVEL_FIELDS.map(f => rawVal(f + n));
+            return TRAVEL_FIELDS.map(f => rawVal(f + n)).concat([jePavzaPoti(n)]);
         }
 
         // Postavi vsebino stolpca in poskrbi za vse, kar je od nje odvisno.
@@ -1574,10 +1823,13 @@
             else if (vrsta === 'tax') rebuildTaxes('taxes-container-' + n, n, vsebina);
             // Pri vrsticah polja izginejo z izrisom in oznaka gre z njimi. Polja
             // poti pa ostanejo ista, zato jim jo je treba odvzeti izrecno.
-            else TRAVEL_FIELDS.forEach((f, i) => {
-                setVal(f + n, vsebina[i]);
-                pozabiZadnje(document.getElementById(f + n));
-            });
+            else {
+                TRAVEL_FIELDS.forEach((f, i) => {
+                    setVal(f + n, vsebina[i]);
+                    pozabiZadnje(document.getElementById(f + n));
+                });
+                nastaviPavzoPoti(n, !!vsebina[TRAVEL_FIELDS.length]);
+            }
             oblikujVsaPolja();
             calculateAll();
             saveToStorage();
@@ -1612,6 +1864,9 @@
                     if (!y || typeof y !== 'object') return false;
                     if (String(x.name) !== String(y.name)) return false;
                     if (steviloAli0(x.val) !== steviloAli0(y.val)) return false;
+                    // Stolpec, v katerem je spremenjena SAMO pavza, ni zacetno
+                    // stanje - kos mora biti buden (Borut, 10. 8. 2026).
+                    if (!!x.pav !== !!y.pav) return false;
                 } else if (steviloAli0(x) !== steviloAli0(y)) return false;
             }
             return true;
@@ -1742,11 +1997,13 @@
             // Stanje po ponastavitvi in stanje pod prizgano veliko razveljavitvijo
             // sta zajeta s tem istim pravilom - stolpec je takrat prazen.
             if (jeZacetno(col)) return;
-            // Pomnik hrani stanje pred PRVO ponastavitvijo in ga druga ne sme povoziti.
-            if (POMNIK[kljuc]) return;
             // Ce okna z vprasanjem ni (testno okolje), se ponastavitev izvede.
             if (typeof confirm === 'function' && confirm(VPRASANJE) !== true) return;
-            POMNIK[kljuc] = posnemiStolpec(vrsta, n);
+            // Pomnik hrani stanje pred PRVO spremembo in ga druga ne sme povoziti.
+            // Od koraka 1j pomnik napolni tudi izbris vrstice, zato tu ne smemo
+            // vec odnehati - kos mora ponastaviti tudi takrat, kadar posnetek ze
+            // stoji. Odnehati bi pomenilo, da po izbrisu vrstice kos ne dela.
+            if (!POMNIK[kljuc]) POMNIK[kljuc] = posnemiStolpec(vrsta, n);
             postaviStolpec(vrsta, n, privzetaVsebina(vrsta, n));
             osveziRazveljavitev(col);
         }
@@ -1997,7 +2254,98 @@
         // Klik na naslov odpre ali zapre stolpec.
         // Zaprt trak se odzove na klik po vsej širini, odprt samo na naslovu -
         // tako klik v vnosno polje stolpca ne zapre.
+        // ---------- Drsenje vrstice in meni desnega klika (korak 1j) ----------
+        // Odprta je vedno SAMO ENA vrstica. Tako delata Ionic in Framework7: ob
+        // novem potegu se prejsnja zapre sama.
+        let odprtiTir = null;
+
+        function zapriTir(tir) {
+            if (!tir) return;
+            if (typeof tir.scrollTo === 'function') tir.scrollTo({ left: 0, behavior: 'smooth' });
+            else if (typeof tir.scrollLeft === 'number') tir.scrollLeft = 0;
+        }
+
+        function zapriOdprtiTir() {
+            if (!odprtiTir) return;
+            zapriTir(odprtiTir);
+            odprtiTir = null;
+        }
+
+        // Dogodek drsenja NE potuje navzgor, zato ga lovimo v lovilni fazi na
+        // dokumentu. Tako je poslusalec en sam in novih vrstic ni treba prijavljati.
+        document.addEventListener('scroll', function (e) {
+            const t = e.target;
+            if (!imaRazred(t, 'tir')) return;
+            zapriMeni();
+            if (t.scrollLeft > 1) {
+                if (odprtiTir && odprtiTir !== t) zapriTir(odprtiTir);
+                odprtiTir = t;
+            } else if (odprtiTir === t) {
+                odprtiTir = null;
+            }
+        }, true);
+
+        // Meni nastane sele ob prvi uporabi. Ob odprtju strani v telesu s tem ni
+        // nicesar, cesar prej ni bilo.
+        let meniEl = null;
+        let meniGumb = null;
+
+        function zagotoviMeni() {
+            if (meniEl) return meniEl;
+            meniEl = document.createElement('div');
+            meniEl.className = 'meni-desni';
+            meniEl.innerHTML = '<button type="button" class="meni-izbrisi">Izbriši</button>';
+            document.body.appendChild(meniEl);
+            return meniEl;
+        }
+
+        function zapriMeni() {
+            if (meniEl && meniEl.style) meniEl.style.setProperty('display', 'none');
+            meniGumb = null;
+        }
+
+        function odpriMeni(gumb, x, y) {
+            const el = zagotoviMeni();
+            if (!el.style) return;
+            el.style.setProperty('left', (typeof x === 'number' ? Math.round(x) : 0) + 'px');
+            el.style.setProperty('top', (typeof y === 'number' ? Math.round(y) : 0) + 'px');
+            el.style.setProperty('display', 'block');
+            meniGumb = gumb;
+        }
+
+        // Desni klik in Control + klik sprozita isti dogodek - izmerjeno na Macu
+        // 11. 8. 2026. Brskalnikov lastni meni utisamo SAMO na gumbu vrstice;
+        // drugod po strani ostane nedotaknjen.
+        document.addEventListener('contextmenu', function (e) {
+            const gumb = najdiStarsa(e.target, 'btn-action');
+            // Gumb "+" ni vrstica. Oznaka 'brez-izbrisa' pomeni vrstico, ki se ne
+            // da izbrisati - tam se meni ne odpre in desni klik ne stori nicesar.
+            if (!gumb || imaRazred(gumb, 'btn-add') || imaRazred(gumb, 'brez-izbrisa')) return;
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            zapriOdprtiTir();
+            odpriMeni(gumb, e.clientX, e.clientY);
+        });
+
+        // Esc zapre meni: tretja pot poleg klika drugam in drsenja.
+        document.addEventListener('keydown', function (e) {
+            if (e && (e.key === 'Escape' || e.key === 'Esc')) zapriMeni();
+        });
+
         document.addEventListener('click', function (e) {
+            // Meni desnega klika ima prednost: dokler je odprt, je edino novo na
+            // zaslonu.
+            if (imaRazred(e.target, 'meni-izbrisi')) {
+                const g = meniGumb;
+                zapriMeni();
+                if (g) odstraniVrstico(g, g.getAttribute('data-vrsta'));
+                return;
+            }
+            zapriMeni();
+
+            // Klik drugam zapre odprto vrstico. Klik V odprto vrstico je ne zapre -
+            // tam stoji gumb Izbrisi, ki ga je uporabnik pravkar razkril.
+            if (odprtiTir && !najdiStarsa(e.target, 'tir')) zapriOdprtiTir();
+
             // Dotik v vnosno polje: prvi ga je pravkar pripravil, drugi
             // pripravljenost umakne. Klik v polje stolpca nikoli ne odpira.
             if (jeVnosnoPolje(e.target)) {
@@ -2006,8 +2354,18 @@
                 return;
             }
 
-            // Dodajanje ali brisanje vrstice je sprememba: razveljavitev ugasne.
-            if (imaRazred(e.target, 'btn-action')) { pozabiRazveljavitev(e.target); return; }
+            // Dodajanje vrstice je sprememba: razveljavitev ugasne.
+            if (imaRazred(e.target, 'btn-add')) { pozabiRazveljavitev(e.target); return; }
+
+            // Gumb za pavziranje v stolpcu Pot ne nastane s kodo za vrstice, zato
+            // svojega dejanja ob nastanku nima - obravnavamo ga tu.
+            const pavzaPoti = najdiStarsa(e.target, 'brez-izbrisa');
+            if (pavzaPoti) { preklopiPavzoPoti(pavzaPoti); return; }
+
+            // Brisanje vrstice si razveljavitev USTVARI (korak 1j, poseg 2), zato
+            // je tu ne ugasnemo. Gumb vrstice vseeno prestrezemo, da ne pade v
+            // pravila pod tem.
+            if (imaRazred(e.target, 'btn-action') || imaRazred(e.target, 'izbrisi')) return;
 
             // Gumba celega dela morata biti pred stolpcnima: nosita oba razreda.
             const kosDela = najdiStarsa(e.target, 'btn-del-ponastavi');
