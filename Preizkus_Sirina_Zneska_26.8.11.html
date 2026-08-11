@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preizkus širine zneska — 11. 8. 2026</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+        padding: 6px;          /* enako kot aplikacija na telefonu */
+        margin: 0;
+        font-size: 17px;
+    }
+    .container {
+        background: #ffffff;
+        padding: 10px;         /* enako kot aplikacija */
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 14px;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .uvod { font-size: 16px; color: #555; margin: 0 0 14px; }
+    h2 { font-size: 17px; margin: 0 0 8px; }
+
+    /* --- stolpec, natanko kot v aplikaciji --- */
+    .col {
+        background: #fffbf2;
+        border: 1px solid #f0e0c8;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+    .col-header { font-size: 16px; font-weight: bold; color: #a35d09; margin-bottom: 8px; }
+
+    .cost-row { display: flex; gap: 5px; margin-bottom: 6px; }
+    .cost-row input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        width: 100%;
+        min-width: 0;
+    }
+    .name-field { flex: 2; }
+    .num-field  { flex: 1; text-align: right; padding-right: 8px; }
+    .btn-action {
+        width: 32px;
+        min-height: 35px;
+        flex-shrink: 0;
+        border: 1px solid #ccc;
+        background: #fff;
+        border-radius: 4px;
+        color: #ccc;
+        font-size: 1.2em;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .krog { display:block; width:0.75em; height:0.75em; border:2px solid currentColor; border-radius:50%; }
+
+    /* razmerja, ki jih preizkušamo */
+    .r15 .name-field { flex: 1.5; }
+    .r11 .name-field { flex: 1; }
+    .r112 .name-field { flex: 1; } .r112 .num-field { flex: 1.2; }
+
+    .oznaka { font-size: 15px; color: #666; margin: 10px 0 4px; }
+
+    .izpis {
+        padding: 10px;
+        background: #222;
+        color: #7fdc7f;
+        border-radius: 4px;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: pre;
+        overflow-x: auto;
+    }
+    .sodba { font-weight: bold; font-size: 16px; margin-top: 6px; }
+    .ok { color: #157a15; } .ni { color: #b3261e; }
+    #merilo { position: absolute; visibility: hidden; white-space: nowrap; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h1>Koliko prostora rabi 1.234.567</h1>
+<p class="uvod">11. 8. 2026 &middot; robovi so natanko taki kot v aplikaciji na telefonu.<br>
+Ničesar ni treba delati &mdash; stran izmeri sama. Prepišite mi črni izpis na dnu.</p>
+
+<span id="merilo">1.234.567</span>
+
+<div class="container">
+    <h2>Kako je videti pri štirih razmerjih</h2>
+
+    <div class="oznaka">1) DANES &mdash; ime : znesek = 2 : 1</div>
+    <div class="col"><div class="col-header">3. Drugi stroški</div>
+        <div class="cost-row" id="v-danes">
+            <input type="text" class="name-field" value="Ordinacija">
+            <input type="text" class="num-field" value="1.234.567">
+            <button class="btn-action"><span class="krog"></span></button>
+        </div>
+    </div>
+
+    <div class="oznaka">2) 1,5 : 1</div>
+    <div class="col"><div class="col-header">3. Drugi stroški</div>
+        <div class="cost-row r15" id="v-15">
+            <input type="text" class="name-field" value="Ordinacija">
+            <input type="text" class="num-field" value="1.234.567">
+            <button class="btn-action"><span class="krog"></span></button>
+        </div>
+    </div>
+
+    <div class="oznaka">3) 1 : 1</div>
+    <div class="col"><div class="col-header">3. Drugi stroški</div>
+        <div class="cost-row r11" id="v-11">
+            <input type="text" class="name-field" value="Ordinacija">
+            <input type="text" class="num-field" value="1.234.567">
+            <button class="btn-action"><span class="krog"></span></button>
+        </div>
+    </div>
+
+    <div class="oznaka">4) 1 : 1,2</div>
+    <div class="col"><div class="col-header">3. Drugi stroški</div>
+        <div class="cost-row r112" id="v-112">
+            <input type="text" class="name-field" value="Ordinacija">
+            <input type="text" class="num-field" value="1.234.567">
+            <button class="btn-action"><span class="krog"></span></button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Izmerjeno</h2>
+    <div class="izpis" id="izpis">merim…</div>
+    <div class="sodba" id="sodba"></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    function prostorZaCrke(polje) {
+        const s = window.getComputedStyle(polje);
+        return polje.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+    }
+
+    function izmeri() {
+        const merilo = document.getElementById('merilo');
+        // Merilo mora imeti isto pisavo kot polje, sicer merimo napacno stvar.
+        const vzorec = document.querySelector('#v-danes .num-field');
+        const sv = window.getComputedStyle(vzorec);
+        merilo.style.fontFamily = sv.fontFamily;
+        merilo.style.fontSize = sv.fontSize;
+        merilo.style.fontWeight = sv.fontWeight;
+        const potrebno = merilo.getBoundingClientRect().width;
+
+        const vrstice = [
+            ['2 : 1  (danes)', '#v-danes'],
+            ['1,5 : 1',        '#v-15'],
+            ['1 : 1',          '#v-11'],
+            ['1 : 1,2',        '#v-112']
+        ];
+
+        const L = [];
+        L.push('sirina zaslona      : ' + Math.round(window.innerWidth) + ' px');
+        L.push('velikost pisave     : ' + sv.fontSize);
+        L.push('1.234.567 potrebuje : ' + potrebno.toFixed(1) + ' px');
+        L.push('');
+        L.push('razmerje        polje   za crke   gre notri');
+        L.push('------------------------------------------');
+
+        let prvoUstrezno = null;
+        vrstice.forEach(([ime, sel]) => {
+            const polje = document.querySelector(sel + ' .num-field');
+            const sirina = polje.clientWidth;
+            const crke = prostorZaCrke(polje);
+            const gre = crke >= potrebno;
+            if (gre && prvoUstrezno === null) prvoUstrezno = ime;
+            L.push(ime.padEnd(15) + String(Math.round(sirina)).padStart(4) +
+                   String(Math.round(crke)).padStart(9) +
+                   (gre ? '   DA (+' + Math.round(crke - potrebno) + ')' :
+                          '   NE (' + Math.round(crke - potrebno) + ')'));
+        });
+
+        const imePolje = document.querySelector('#v-11 .name-field');
+        L.push('');
+        L.push('pri 1:1 ima ime ' + Math.round(prostorZaCrke(imePolje)) + ' px za crke');
+
+        document.getElementById('izpis').textContent = L.join('\n');
+
+        const s = document.getElementById('sodba');
+        if (prvoUstrezno) {
+            s.textContent = '✓ Najmanjše razmerje, pri katerem gre notri: ' + prvoUstrezno;
+            s.className = 'sodba ok';
+        } else {
+            s.textContent = '✗ Pri nobenem razmerju ne gre notri — potreben bo krajši zapis.';
+            s.className = 'sodba ni';
+        }
+    }
+
+    // Pisave se nalozijo z zamikom; merimo, ko so na mestu.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(izmeri);
+    else window.addEventListener('load', izmeri);
+    window.addEventListener('resize', izmeri);
+})();
+</script>
+
+</body>
+</html>
