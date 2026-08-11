@@ -419,8 +419,17 @@
         /* Pavziran gumb: barva ozadja in okvir aktivne barve, 2 px NAVZNOTER.
            Okvir je senca navznoter, ne obroba - obroba bi gumb razsirila za 4 px
            in vrstica bi se premaknila. */
+        /* Pavziran gumb ima barvo STOLPCA, v katerem stoji - vidi se samo njegova
+           obroba. Barve ne prepisujemo, ampak pustimo gumb PROSOJEN: med njim in
+           stolpcem ni nicesar pobarvanega, zato skoznj pogleda barva stolpca sama.
+           Zakaj tako in ne s stirimi zapisanimi barvami: stolpci so razlicnih barv
+           (topla in hladna polovica, prvi stolpec drugacen od ostalih), zapisane
+           barve pa bi se ob koraku 10 razsle s stolpci. Prosojnost se ne more
+           razsiti.
+           Dva zgresena poskusa pred tem: #f8f9fa (ozadje bele kartice - gumb je bil
+           videti bel) in #d9d9d9 (barva pavziranega polja - gumb je bil siv). */
         .btn-pavza.pavzirano {
-            background-color: #f8f9fa;
+            background-color: transparent;
             box-shadow: inset 0 0 0 2px #dfc08a;
             color: #dfc08a;
         }
@@ -462,6 +471,11 @@
             .btn-add:hover { background-color: #27ae60; }
             .izbrisi:hover { background-color: #c0392b; }
             .meni-izbrisi:hover { background-color: #f4f4f4; }
+            /* Aktiven gumb pavze potemni enako mocno kot gumb + : na 85 %
+               vsake barve. Pavziran gumb NE potemni - ta je ze v mirovanju
+               in bi sprememba pomenila, da se nekaj zgodi. */
+            .btn-pavza:not(.pavzirano):hover { background-color: #bea375; }
+            .row-second .btn-pavza:not(.pavzirano):hover { background-color: #85afa7; }
         }
 
         /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
