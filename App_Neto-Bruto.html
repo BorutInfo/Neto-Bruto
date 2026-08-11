@@ -426,30 +426,35 @@
            Barva je barva kosa - v drugi vrstici sklopa je kos druge barve, zato
            je tudi ta gumb. Siva kosa je bila zavrnjena: tam pomeni "ni kaj
            narediti", tu bi pomenila nekaj drugega. */
-        .btn-pavza { background-color: #dfc08a; }
-        .row-second .btn-pavza { background-color: #9ccec4; }
+        /* Gumb za pavziranje je postavljen kot VNOSNO POLJE, ne kot obarvan gumb:
+           stoji v isti vrstici z dvema poljema in se z njima poravnava (Borut,
+           11. 8. 2026). Belo ozadje in obroba #ccc sta natanko tista, ki ju imata
+           polji ob njem.
+           Sirina ostane 32 px: obroba se steje V sirino (border-box), zato se ob
+           prehodu z 1 px na 2 px ne premakne nic. */
+        .btn-pavza {
+            box-sizing: border-box;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            color: #dfc08a;
+        }
+        .row-second .btn-pavza { color: #9ccec4; }
 
         /* Pavziran gumb: barva ozadja in okvir aktivne barve, 2 px NAVZNOTER.
            Okvir je senca navznoter, ne obroba - obroba bi gumb razsirila za 4 px
            in vrstica bi se premaknila. */
-        /* Pavziran gumb ima barvo STOLPCA, v katerem stoji - vidi se samo njegova
-           obroba. Barve ne prepisujemo, ampak pustimo gumb PROSOJEN: med njim in
-           stolpcem ni nicesar pobarvanega, zato skoznj pogleda barva stolpca sama.
-           Zakaj tako in ne s stirimi zapisanimi barvami: stolpci so razlicnih barv
-           (topla in hladna polovica, prvi stolpec drugacen od ostalih), zapisane
-           barve pa bi se ob koraku 10 razsle s stolpci. Prosojnost se ne more
-           razsiti.
-           Dva zgresena poskusa pred tem: #f8f9fa (ozadje bele kartice - gumb je bil
-           videti bel) in #d9d9d9 (barva pavziranega polja - gumb je bil siv). */
+        /* Pavziran gumb je PROSOJEN, zato skoznj pogleda barva stolpca, in ima
+           obrobo v barvi kosa. Gumb NE posivi kot polji ob njem: siva pomeni
+           zaklenjeno polje, gumb pa je edino, kar v pavzirani vrstici ostane
+           odprto - prav z njim se pavza odpravi.
+           Zakaj prosojen in ne z zapisano barvo: stolpci so razlicnih barv (topla
+           in hladna polovica, prvi stolpec drugacen od ostalih), zapisane barve pa
+           bi se ob koraku 10 razsle s stolpci. Prosojnost se ne more razsiti. */
         .btn-pavza.pavzirano {
             background-color: transparent;
-            box-shadow: inset 0 0 0 2px #dfc08a;
-            color: #dfc08a;
+            border: 2px solid #dfc08a;
         }
-        .row-second .btn-pavza.pavzirano {
-            box-shadow: inset 0 0 0 2px #9ccec4;
-            color: #9ccec4;
-        }
+        .row-second .btn-pavza.pavzirano { border-color: #9ccec4; }
 
         /* Prazen krog je NARISAN, ne zapisan z znakom - isti nauk kot pri kosu in
            kljukici iz koraka 1f: pisava redke znake zamenja in testi tega ne
@@ -462,6 +467,12 @@
             border: 2px solid currentColor;
             border-radius: 50%;
         }
+
+        /* Dokler znesek NI pavziran, je krogec siv - ista siva kot obroba vnosnih
+           polj in kot obroba gumba samega. Gumb je s tem cel videti kot vnosno
+           polje in ne kaze nicesar, kar bi bilo treba opaziti.
+           Ko je znesek pavziran, krogec dobi barvo kosa in se vidi. */
+        .btn-pavza:not(.pavzirano) .krog { border-color: #ccc; }
 
         /* Pavzirano polje je ZAKLENJENO: vanj ni mogoce pisati, zneska ni mogoce
            ne oznaciti ne prekopirati (Borut, 11. 8. 2026). Sivina #d9d9d9 je
@@ -484,11 +495,10 @@
             .btn-add:hover { background-color: #27ae60; }
             .izbrisi:hover { background-color: #c0392b; }
             .meni-izbrisi:hover { background-color: #f4f4f4; }
-            /* Aktiven gumb pavze potemni enako mocno kot gumb + : na 85 %
-               vsake barve. Pavziran gumb NE potemni - ta je ze v mirovanju
-               in bi sprememba pomenila, da se nekaj zgodi. */
-            .btn-pavza:not(.pavzirano):hover { background-color: #bea375; }
-            .row-second .btn-pavza:not(.pavzirano):hover { background-color: #85afa7; }
+            /* Gumb pavze je bel kot vnosno polje, zato ob miski potemni v isto
+               svetlo sivino kot vrstica v meniju. Pavziran gumb NE potemni - ta je
+               ze v mirovanju in bi sprememba pomenila, da se nekaj zgodi. */
+            .btn-pavza:not(.pavzirano):hover { background-color: #f4f4f4; }
         }
 
         /* touch-action se NE podeduje: pravilo na body samo po sebi dvojnega dotika
