@@ -228,27 +228,17 @@ Vsak preizkus opravite in preberite črni izpis pod njim.</p>
 
 <!-- ============ 5 ============ -->
 <div class="preizkus">
-    <h2>5. Mrtvi pas ob robu</h2>
-    <p class="navodilo">Začnite poteg <b>čisto z levega roba zaslona</b>, s prsta,
-    ki se dotakne stekla tik ob okvirju telefona, in potegnite v desno.<br><br>
-    <b>Kaj gledamo:</b> ali Safari odide na prejšnjo stran. Če odide, potrebujemo
-    mrtvi pas &mdash; 15 px ob robu, kjer drsenja ne dovolimo.</p>
-    <div class="izpis" id="izpis5">Odgovor povejte na roko: je Safari odšel nazaj, da ali ne.</div>
-</div>
-
-<!-- ============ 6 ============ -->
-<div class="preizkus">
-    <h2>6. Desni klik in Control + klik (samo Mac)</h2>
+    <h2>5. Desni klik in Control + klik (samo Mac)</h2>
     <p class="navodilo">Na Macu: najprej <b>desni klik</b> na gumb spodaj, nato še
     <b>Control + klik</b> na isti gumb. Na telefonu ta preizkus preskočite.</p>
 
     <div class="vrstica">
         <input type="text" class="ime" value="Ordinacija">
         <input type="text" inputmode="decimal" class="znesek" value="980">
-        <button class="gumb-pavza" id="gumb6">&#9711;</button>
+        <button class="gumb-pavza" id="gumb5">&#9711;</button>
     </div>
-    <div class="izpis" id="izpis6">Še ni meritve.</div>
-    <div class="sodba" id="sodba6"></div>
+    <div class="izpis" id="izpis5">Še ni meritve.</div>
+    <div class="sodba" id="sodba5"></div>
 </div>
 
 <script>
@@ -365,13 +355,13 @@ Vsak preizkus opravite in preberite črni izpis pod njim.</p>
 
     // ---------- Preizkus 6: desni klik ----------
     (function () {
-        var gumb = document.getElementById('gumb6');
+        var gumb = document.getElementById('gumb5');
         var videno = { desni: false, control: false };
 
         gumb.addEventListener('contextmenu', function (e) {
             e.preventDefault();
             if (e.ctrlKey) videno.control = true; else videno.desni = true;
-            izpisi(6, [
+            izpisi(5, [
                 'zadnji dogodek: contextmenu',
                 'Control je bil pritisnjen: ' + (e.ctrlKey ? 'da' : 'ne'),
                 'gumb miške (button): ' + e.button,
@@ -379,8 +369,8 @@ Vsak preizkus opravite in preberite črni izpis pod njim.</p>
                 'desni klik viden: ' + (videno.desni ? 'DA' : 'še ne'),
                 'Control + klik viden: ' + (videno.control ? 'DA' : 'še ne')
             ].join('\n'));
-            if (videno.desni && videno.control) sodba(6, true, '✓ OBOJE DELUJE — desni klik in Control + klik sprožita isto stvar.');
-            else sodba(6, false, 'manjka še: ' + (videno.desni ? 'Control + klik' : 'desni klik'));
+            if (videno.desni && videno.control) sodba(5, true, '✓ OBOJE DELUJE — desni klik in Control + klik sprožita isto stvar.');
+            else sodba(5, false, 'manjka še: ' + (videno.desni ? 'Control + klik' : 'desni klik'));
         });
     })();
 
@@ -395,8 +385,8 @@ Vsak preizkus opravite in preberite črni izpis pod njim.</p>
         });
         var d = document.getElementById('drsna4');
         if (d) d.style.transform = '';
-        izpisi(6, 'Še ni meritve.');
-        document.getElementById('sodba6').textContent = '';
+        izpisi(5, 'Še ni meritve.');
+        document.getElementById('sodba5').textContent = '';
         if (window.getSelection) window.getSelection().removeAllRanges();
     };
 })();
