@@ -326,7 +326,20 @@
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
+            /* Levo od vrstice ni nicesar, zato poteg v desno nima kam. iPhone bi
+               tam drsnik raztegnil in ga spustil nazaj - vrstica se premakne in
+               zaniha, cesar ne zeli nihce (Borut, 11. 8. 2026). Ta ukaz odboj
+               ukine. Hkrati prepreci, da bi premocan poteg sprozil Safarijev
+               "nazaj" - Googlovo navodilo ga za to zgradbo priporoca tako in tako. */
+            overscroll-behavior-x: none;
         }
+
+        /* SCIPANJE Z DVEMA PRSTOMA: dokler sta na steklu dva prsta, tiri ne drsijo.
+           Vsak prst sicer vlece vrstico pod sabo in vrstici se med povecevanjem
+           premikata (izmerjeno na napravi 11. 8. 2026). Povecave same ne prekinemo
+           z nicimer - korak 11 jo potrebuje, prepoved v glavi strani pa je bila
+           ze zavrnjena. */
+        body.scipanje .tir { overflow-x: hidden; }
         /* Drsni trak skrijemo: gib sam je znak, da se vrstica premika. */
         .tir::-webkit-scrollbar { display: none; }
 
@@ -2298,6 +2311,57 @@
                 odprtiTir = null;
             }
         }, true);
+
+        // ---------- Scipanje z dvema prstoma (11. 8. 2026) ----------
+        // Prsta dva, tira dva: vsak prst potegne vrstico pod sabo. Uhojena pot, ki
+        // jo uporabljajo tudi ogrodja: dokler je na steklu vec kot en prst, drsniki
+        // ne drsijo, in prepoved velja do dviga ZADNJEGA prsta. Nic ne prekliksemo,
+        // zato povecava ostane nedotaknjena. Delo z dotiki je na iOS in Androidu
+        // enako - to je bila Borutova zahteva.
+        const RAZRED_SCIPANJE = 'scipanje';
+        let legaTiraPredScipanjem = null;
+
+        function zacniScipanje() {
+            if (!document.body || !document.body.classList) return;
+            if (document.body.classList.contains(RAZRED_SCIPANJE)) return;
+            // Odprta vrstica mora ostati odprta in polje aktivno (Borut, 11. 8.
+            // 2026). Prepoved drsenja bi vrstico sama vrnila na zacetek, zato si
+            // njeno lego zapomnimo in jo po scipanju postavimo nazaj. Fokusa se
+            // ne dotaknemo z nicimer.
+            legaTiraPredScipanjem = (odprtiTir && typeof odprtiTir.scrollLeft === 'number')
+                ? odprtiTir.scrollLeft : null;
+            document.body.classList.add(RAZRED_SCIPANJE);
+        }
+
+        function koncajScipanje() {
+            if (!document.body || !document.body.classList) return;
+            if (!document.body.classList.contains(RAZRED_SCIPANJE)) return;
+            document.body.classList.remove(RAZRED_SCIPANJE);
+            const lega = legaTiraPredScipanjem;
+            legaTiraPredScipanjem = null;
+            if (lega === null || !odprtiTir) return;
+            odprtiTir.scrollLeft = lega;
+        }
+
+        function steviloPrstov(e) {
+            return (e && e.touches && typeof e.touches.length === 'number') ? e.touches.length : 0;
+        }
+
+        document.addEventListener('touchstart', function (e) {
+            if (steviloPrstov(e) > 1) zacniScipanje();
+        }, { passive: true });
+
+        // Sele ko je dvignjen ZADNJI prst. Dokler je na steklu se en, gib ni koncan
+        // in bi tir spet zacel drseti sredi povecave.
+        document.addEventListener('touchend', function (e) {
+            if (steviloPrstov(e) === 0) koncajScipanje();
+        }, { passive: true });
+
+        // Prekinjen dotik (klic, obvestilo, dlan cez zaslon) mora prepoved sprostiti
+        // enako kot navaden dvig - sicer bi tiri ostali zakleneni.
+        document.addEventListener('touchcancel', function (e) {
+            if (steviloPrstov(e) === 0) koncajScipanje();
+        }, { passive: true });
 
         // Meni nastane sele ob prvi uporabi. Ob odprtju strani v telesu s tem ni
         // nicesar, cesar prej ni bilo.
