@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preizkus drsenja — 11. 8. 2026</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 17px;
+        line-height: 1.45;
+        margin: 0;
+        padding: 12px;
+        background: #f4f4f4;
+        color: #222;
+    }
+    h1 { font-size: 21px; margin: 0 0 4px; }
+    h2 { font-size: 18px; margin: 0 0 6px; }
+    .uvod { font-size: 16px; color: #555; margin: 0 0 18px; }
+
+    .preizkus {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 18px;
+    }
+    .navodilo {
+        font-size: 16px;
+        color: #444;
+        margin: 0 0 10px;
+        padding: 8px;
+        background: #eef4fb;
+        border-radius: 4px;
+    }
+
+    /* ---------- Vrstica, enaka kot v aplikaciji ---------- */
+    .vrstica {
+        display: flex;
+        gap: 5px;
+        background: #fff;
+        padding: 0;
+    }
+    .vrstica input {
+        font-size: 17px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        min-width: 0;
+        background: #fff;
+    }
+    .vrstica .ime { flex: 2; }
+    .vrstica .znesek { flex: 1; text-align: right; }
+    .vrstica input:disabled {
+        background: #d9d9d9;
+        /* Barvo pisave zapisemo sami: brskalnik ugasnjenim poljem sicer
+           pobledi pisavo po svoje in zneska skoraj ni videti. */
+        color: #222;
+        -webkit-text-fill-color: #222;
+        opacity: 1;
+    }
+    .gumb-pavza {
+        width: 32px;
+        min-height: 35px;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 4px;
+        background: #e74c3c;
+        color: #fff;
+        font-size: 17px;
+        cursor: pointer;
+    }
+
+    /* ---------- POT A: drsenje prepustimo brskalniku ---------- */
+    .okvir {
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+    }
+    .tir {
+        display: grid;
+        grid-template-columns: 100% 90px;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+    .tir::-webkit-scrollbar { display: none; }
+    .tir > .vrstica { scroll-snap-align: start; }
+    .tir > .izbrisi { scroll-snap-align: end; }
+    .izbrisi {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e74c3c;
+        color: #fff;
+        font-size: 16px;
+        border: none;
+    }
+
+    /* ---------- POT B: prst lovimo sami ---------- */
+    .okvir-b { position: relative; overflow: hidden; border-radius: 4px; background: #e74c3c; }
+    .izbrisi-b {
+        position: absolute; top: 0; right: 0; bottom: 0; width: 90px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 16px;
+    }
+    .drsna { position: relative; background: #fff; touch-action: pan-y; }
+
+    /* ---------- Izpis meritve ---------- */
+    .izpis {
+        margin-top: 10px;
+        padding: 10px;
+        background: #222;
+        color: #7fdc7f;
+        border-radius: 4px;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 15px;
+        white-space: pre-wrap;
+        min-height: 3.2em;
+    }
+    .sodba { font-weight: bold; font-size: 16px; margin-top: 8px; }
+    .ok { color: #157a15; }
+    .ni { color: #b3261e; }
+
+    .ponastavi {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        font-size: 17px;
+        background: #3498db;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<h1>Preizkus drsenja</h1>
+<p class="uvod">11. 8. 2026 &middot; korak 1j. Ta stran se aplikacije ne dotakne.<br>
+Vsak preizkus opravite in preberite črni izpis pod njim.</p>
+
+<button class="ponastavi" onclick="ponastavi()">Ponastavi vse meritve</button>
+
+<!-- ============ 1 ============ -->
+<div class="preizkus">
+    <h2>1. Brskalnikovo drsenje &mdash; polji odprti</h2>
+    <p class="navodilo">Položite prst <b>na polje z zneskom 1.200</b> in potegnite v levo.
+    Nato poskusite še s prstom na polju z besedilom &bdquo;Šola&ldquo;.</p>
+
+    <div class="okvir">
+        <div class="tir" id="tir1">
+            <div class="vrstica">
+                <input type="text" class="ime" value="Šola">
+                <input type="text" inputmode="decimal" class="znesek" value="1.200">
+                <button class="gumb-pavza">&#9711;</button>
+            </div>
+            <button class="izbrisi">Izbriši</button>
+        </div>
+    </div>
+    <div class="izpis" id="izpis1">Še ni meritve.</div>
+    <div class="sodba" id="sodba1"></div>
+</div>
+
+<!-- ============ 2 ============ -->
+<div class="preizkus">
+    <h2>2. Brskalnikovo drsenje &mdash; polji ugasnjeni (pavzirano)</h2>
+    <p class="navodilo">Isto kot 1, le da sta polji zaklenjeni.
+    Položite prst na sivi znesek in potegnite v levo.</p>
+
+    <div class="okvir">
+        <div class="tir" id="tir2">
+            <div class="vrstica">
+                <input type="text" class="ime" value="Kosilo" disabled>
+                <input type="text" inputmode="decimal" class="znesek" value="300" disabled>
+                <button class="gumb-pavza">&#9711;</button>
+            </div>
+            <button class="izbrisi">Izbriši</button>
+        </div>
+    </div>
+    <div class="izpis" id="izpis2">Še ni meritve.</div>
+    <div class="sodba" id="sodba2"></div>
+</div>
+
+<!-- ============ 3 ============ -->
+<div class="preizkus">
+    <h2>3. Brskalnikovo drsenje &mdash; med tipkanjem</h2>
+    <p class="navodilo">Najprej <b>kliknite v polje z zneskom</b>, da se odpre tipkovnica.
+    Šele nato potegnite v levo, ne da bi tipkovnico zaprli.</p>
+
+    <div class="okvir">
+        <div class="tir" id="tir3">
+            <div class="vrstica">
+                <input type="text" class="ime" value="Gorivo">
+                <input type="text" inputmode="decimal" class="znesek" value="200">
+                <button class="gumb-pavza">&#9711;</button>
+            </div>
+            <button class="izbrisi">Izbriši</button>
+        </div>
+    </div>
+    <div class="izpis" id="izpis3">Še ni meritve.</div>
+    <div class="sodba" id="sodba3"></div>
+</div>
+
+<!-- ============ 4 ============ -->
+<div class="preizkus">
+    <h2>4. Prst lovimo sami</h2>
+    <p class="navodilo">Druga pot, za primerjavo. Spet položite prst na polje z zneskom
+    in potegnite v levo.</p>
+
+    <div class="okvir-b">
+        <div class="izbrisi-b">Izbriši</div>
+        <div class="drsna" id="drsna4">
+            <div class="vrstica">
+                <input type="text" class="ime" value="Vrtec">
+                <input type="text" inputmode="decimal" class="znesek" value="450">
+                <button class="gumb-pavza">&#9711;</button>
+            </div>
+        </div>
+    </div>
+    <div class="izpis" id="izpis4">Še ni meritve.</div>
+    <div class="sodba" id="sodba4"></div>
+</div>
+
+<!-- ============ 5 ============ -->
+<div class="preizkus">
+    <h2>5. Mrtvi pas ob robu</h2>
+    <p class="navodilo">Začnite poteg <b>čisto z levega roba zaslona</b>, s prsta,
+    ki se dotakne stekla tik ob okvirju telefona, in potegnite v desno.<br><br>
+    <b>Kaj gledamo:</b> ali Safari odide na prejšnjo stran. Če odide, potrebujemo
+    mrtvi pas &mdash; 15 px ob robu, kjer drsenja ne dovolimo.</p>
+    <div class="izpis" id="izpis5">Odgovor povejte na roko: je Safari odšel nazaj, da ali ne.</div>
+</div>
+
+<!-- ============ 6 ============ -->
+<div class="preizkus">
+    <h2>6. Desni klik in Control + klik (samo Mac)</h2>
+    <p class="navodilo">Na Macu: najprej <b>desni klik</b> na gumb spodaj, nato še
+    <b>Control + klik</b> na isti gumb. Na telefonu ta preizkus preskočite.</p>
+
+    <div class="vrstica">
+        <input type="text" class="ime" value="Ordinacija">
+        <input type="text" inputmode="decimal" class="znesek" value="980">
+        <button class="gumb-pavza" id="gumb6">&#9711;</button>
+    </div>
+    <div class="izpis" id="izpis6">Še ni meritve.</div>
+    <div class="sodba" id="sodba6"></div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    function izpisi(st, besedilo) {
+        document.getElementById('izpis' + st).textContent = besedilo;
+    }
+    function sodba(st, uspelo, besedilo) {
+        var el = document.getElementById('sodba' + st);
+        el.textContent = besedilo;
+        el.className = 'sodba ' + (uspelo ? 'ok' : 'ni');
+    }
+    function oznaceno() {
+        var s = window.getSelection ? String(window.getSelection()) : '';
+        return s.replace(/\s+/g, '');
+    }
+
+    // ---------- Preizkusi 1, 2, 3: brskalnikovo drsenje ----------
+    [1, 2, 3].forEach(function (st) {
+        var tir = document.getElementById('tir' + st);
+        var najvec = 0;
+        var stevec = 0;
+        var kje = 'nikjer';
+
+        tir.addEventListener('touchstart', function (e) {
+            najvec = 0;
+            stevec = 0;
+            var t = e.target;
+            if (t.tagName === 'INPUT') kje = t.disabled ? 'ugasnjeno polje' : 'polje ' + (t.className.indexOf('znesek') >= 0 ? 'z zneskom' : 'z besedilom');
+            else if (t.tagName === 'BUTTON') kje = 'gumb';
+            else kje = 'prazen prostor';
+        }, { passive: true });
+
+        tir.addEventListener('scroll', function () {
+            stevec++;
+            if (tir.scrollLeft > najvec) najvec = tir.scrollLeft;
+            izpisi(st, 'prst je bil na: ' + kje +
+                '\nvrstica se je premaknila za: ' + Math.round(najvec) + ' px' +
+                '\nzdaj stoji na: ' + Math.round(tir.scrollLeft) + ' px');
+        }, { passive: true });
+
+        tir.addEventListener('touchend', function () {
+            setTimeout(function () {
+                var ozn = oznaceno();
+                var vrstice = [
+                    'prst je bil na: ' + kje,
+                    'vrstica se je premaknila za: ' + Math.round(najvec) + ' px',
+                    'zdaj stoji na: ' + Math.round(tir.scrollLeft) + ' px',
+                    'označeno besedilo: ' + (ozn ? '"' + ozn + '" (' + ozn.length + ' znakov)' : 'nič')
+                ];
+                izpisi(st, vrstice.join('\n'));
+                if (najvec >= 40 && !ozn) sodba(st, true, '✓ DELUJE — vrstica je zdrsnila, besedilo se ni označilo.');
+                else if (najvec >= 40 && ozn) sodba(st, false, '✗ vrstica je zdrsnila, A besedilo se je označilo.');
+                else if (ozn) sodba(st, false, '✗ NE DELUJE — namesto drsenja se je označilo besedilo.');
+                else sodba(st, false, '✗ NE DELUJE — vrstica se ni premaknila.');
+            }, 120);
+        }, { passive: true });
+    });
+
+    // ---------- Preizkus 4: prst lovimo sami ----------
+    (function () {
+        var el = document.getElementById('drsna4');
+        var zacetekX = 0, zacetekY = 0, odmik = 0, najvec = 0, kje = 'nikjer', drsi = false, odloceno = false;
+
+        el.addEventListener('touchstart', function (e) {
+            var t = e.touches[0];
+            zacetekX = t.clientX; zacetekY = t.clientY;
+            najvec = 0; drsi = false; odloceno = false;
+            var c = e.target;
+            if (c.tagName === 'INPUT') kje = 'polje ' + (c.className.indexOf('znesek') >= 0 ? 'z zneskom' : 'z besedilom');
+            else if (c.tagName === 'BUTTON') kje = 'gumb';
+            else kje = 'prazen prostor';
+        }, { passive: true });
+
+        el.addEventListener('touchmove', function (e) {
+            var t = e.touches[0];
+            var dx = t.clientX - zacetekX;
+            var dy = t.clientY - zacetekY;
+            if (!odloceno) {
+                if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+                odloceno = true;
+                drsi = Math.abs(dx) > Math.abs(dy);
+            }
+            if (!drsi) return;
+            if (e.cancelable) e.preventDefault();
+            odmik = Math.max(-90, Math.min(0, dx));
+            if (-odmik > najvec) najvec = -odmik;
+            el.style.transform = 'translateX(' + odmik + 'px)';
+            izpisi(4, 'prst je bil na: ' + kje + '\nvrstica se je premaknila za: ' + Math.round(najvec) + ' px');
+        }, { passive: false });
+
+        el.addEventListener('touchend', function () {
+            var koncna = (najvec > 45) ? -90 : 0;
+            el.style.transition = 'transform 0.2s';
+            el.style.transform = 'translateX(' + koncna + 'px)';
+            setTimeout(function () { el.style.transition = ''; }, 220);
+            setTimeout(function () {
+                var ozn = oznaceno();
+                izpisi(4, [
+                    'prst je bil na: ' + kje,
+                    'vrstica se je premaknila za: ' + Math.round(najvec) + ' px',
+                    'ostala je: ' + (koncna ? 'odprta' : 'zaprta'),
+                    'označeno besedilo: ' + (ozn ? '"' + ozn + '" (' + ozn.length + ' znakov)' : 'nič')
+                ].join('\n'));
+                if (najvec >= 40 && !ozn) sodba(4, true, '✓ DELUJE — vrstica je zdrsnila, besedilo se ni označilo.');
+                else if (najvec >= 40 && ozn) sodba(4, false, '✗ vrstica je zdrsnila, A besedilo se je označilo.');
+                else if (ozn) sodba(4, false, '✗ NE DELUJE — namesto drsenja se je označilo besedilo.');
+                else sodba(4, false, '✗ NE DELUJE — vrstica se ni premaknila.');
+            }, 120);
+        }, { passive: true });
+    })();
+
+    // ---------- Preizkus 6: desni klik ----------
+    (function () {
+        var gumb = document.getElementById('gumb6');
+        var videno = { desni: false, control: false };
+
+        gumb.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            if (e.ctrlKey) videno.control = true; else videno.desni = true;
+            izpisi(6, [
+                'zadnji dogodek: contextmenu',
+                'Control je bil pritisnjen: ' + (e.ctrlKey ? 'da' : 'ne'),
+                'gumb miške (button): ' + e.button,
+                '',
+                'desni klik viden: ' + (videno.desni ? 'DA' : 'še ne'),
+                'Control + klik viden: ' + (videno.control ? 'DA' : 'še ne')
+            ].join('\n'));
+            if (videno.desni && videno.control) sodba(6, true, '✓ OBOJE DELUJE — desni klik in Control + klik sprožita isto stvar.');
+            else sodba(6, false, 'manjka še: ' + (videno.desni ? 'Control + klik' : 'desni klik'));
+        });
+    })();
+
+    // ---------- Ponastavitev ----------
+    window.ponastavi = function () {
+        [1, 2, 3, 4].forEach(function (st) {
+            var tir = document.getElementById('tir' + st);
+            if (tir) tir.scrollLeft = 0;
+            izpisi(st, 'Še ni meritve.');
+            sodba(st, false, '');
+            document.getElementById('sodba' + st).className = 'sodba';
+        });
+        var d = document.getElementById('drsna4');
+        if (d) d.style.transform = '';
+        izpisi(6, 'Še ni meritve.');
+        document.getElementById('sodba6').textContent = '';
+        if (window.getSelection) window.getSelection().removeAllRanges();
+    };
+})();
+</script>
+
+</body>
+</html>
